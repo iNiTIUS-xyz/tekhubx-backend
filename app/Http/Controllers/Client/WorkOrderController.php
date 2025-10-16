@@ -822,7 +822,7 @@ class WorkOrderController extends Controller
             'old_documents_id' => 'nullable',
             'tasks' => 'nullable|array',
             'buyer_custom_field' => 'nullable|string',
-            'pay_type' => 'required|in:Hourly,Fixed,Per Device,Blended',
+            'pay_type' => 'required|in:' . implode(',', GlobalConstant::PAY_TYPE),
             'hourly_rate' => 'sometimes|required_if:pay_type,Hourly',
             'max_hours' => 'sometimes|required_if:pay_type,Hourly',
             'total_pay' => 'sometimes|required_if:pay_type,Fixed',
