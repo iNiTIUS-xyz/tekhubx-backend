@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client\template;
 use App\Models\Template;
 use App\Models\WorkOrder;
 use Illuminate\Http\Request;
+use App\Utils\GlobalConstant;
 use App\Utils\ServerErrorMask;
 use App\Models\AdditionalContact;
 use App\Models\QualificationType;
@@ -59,7 +60,7 @@ class TemplateController extends Controller
             'additional_contact_info' => 'nullable|array',
             'tasks' => 'nullable|array',
             'buyer_custom_field' => 'nullable',
-            'pay_type' => 'nullable|in:Hourly,Fixed,Per Device,Blended',
+            'pay_type' => 'required|in:' . implode(',', GlobalConstant::PAY_TYPE),
             'hourly_rate' => 'nullable|required_if:pay_type,Hourly',
             'max_hours' => 'nullable|required_if:pay_type,Hourly',
             'total_pay' => 'nullable|required_if:pay_type,Fixed',
