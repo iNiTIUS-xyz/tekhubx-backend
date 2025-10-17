@@ -766,7 +766,7 @@ class WorkOrderController extends Controller
             }
             return response()->json([
                 'status' => 'success',
-                'work_order' => $work_order,
+                'work_order' => new WorkOrderResource($work_order),
             ]);
         } catch (\Exception $error) {
             Log::error($error);
