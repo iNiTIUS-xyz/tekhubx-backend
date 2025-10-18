@@ -151,6 +151,7 @@ class WorkOrderResource extends JsonResource
             'service_description_note_private' => $this->service_description_note_private,
             'work_category' => $this->work_category,
             'additional_work_category' => $this->additional_work_category,
+            'service_type_details' => $this->service_type ?? null,
             'service_type' => $this->service_type->name ?? null,
             'location' => $this->additional_location,
             'schedule_type' => $this->schedule_type,
