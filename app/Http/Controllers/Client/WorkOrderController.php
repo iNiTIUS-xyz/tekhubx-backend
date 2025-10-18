@@ -959,7 +959,7 @@ class WorkOrderController extends Controller
                 $state = State::where('id', $request->state_id)->first();
             }
 
-            $taxValue = $this->taxService->calculateTax($state, $country, $request, $total);
+            // $taxValue = $this->taxService->calculateTax($state, $country, $request, $total);
 
             $workOrder->template_id = $request->template_id;
             $workOrder->work_order_title = $request->work_order_title;
