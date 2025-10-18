@@ -1004,7 +1004,7 @@ class WorkOrderController extends Controller
             $workOrder->additional_hourly_rate = $request->additional_hourly_rate;
             $workOrder->max_additional_hour = $request->max_additional_hour;
             $workOrder->labor = $total;
-            $workOrder->state_tax = $taxValue;
+            $workOrder->state_tax = $taxValue ?? 0.0;
             $workOrder->bank_account_id = $request->bank_account_id;
             $workOrder->rule_id = $request->rule_id;
             $workOrder->shipment_id = json_encode($shipment_arr);
