@@ -975,8 +975,8 @@ class WorkOrderController extends Controller
             $workOrder->service_type_id = $request->service_type_id;
             $workOrder->qualification_type = $request->has('qualification_type') ? json_encode($request->qualification_type) : null;
             $workOrder->location_id = $location_id ?? $request->save_location_id ?? $request->remote;
-            $workOrder->additional_contact_id = json_encode($additionalContactIds);
-            $workOrder->documents_file = json_encode($allFilePaths);
+            $workOrder->additional_contact_id = json_encode($additionalContactIds) ?? null;
+            $workOrder->documents_file = json_encode($allFilePaths) ?? null;
             $workOrder->schedule_type = $request->schedule_type;
             $workOrder->schedule_date = $request->schedule_date;
             $workOrder->schedule_time = $request->schedule_time;
