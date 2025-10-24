@@ -8,7 +8,6 @@ use App\Models\Review;
 use App\Models\WorkOrder;
 use App\Models\PoolDetails;
 use Illuminate\Http\Request;
-use App\Http\Resources\ProviderResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PoolDetailsResource extends JsonResource
@@ -21,28 +20,36 @@ class PoolDetailsResource extends JsonResource
     public function toArray(Request $request): array
     {
         $rating = Review::where('tag', 'client')
-                ->where('provider_id', $this->provider_id)
-                ->avg('rating');
-        $jobs = WorkOrder::where('assigned_id', $this->provider_id)->where('status', 'Complete')->count();
-        $pool_name = PoolDetails::where('provider_id', $this->provider_id)->first();
+            ->where('provider_id', $this->provider_id)
+            ->avg('rating');
 
-        $last_active = User::find($this->provider_id);
-        $lastActiveTime = Carbon::parse($last_active->updated_at);
-        $humanReadable = $lastActiveTime->diffForHumans();
+        $jobs = WorkOrder::where('assigned_id', $this->provider_id)
+            ->where('status', 'Complete')
+            ->count();
 
+        $pool = PoolDetails::where('provider_id', $this->provider_id)->first();
+        $user = User::find($this->provider_id);
+
+        $lastActiveTime = $user ? Carbon::parse($user->updated_at)->diffForHumans() : 'N/A';
+
+        $profile = $this->profile;
+        $firstName = $profile->first_name ?? '';
+        $lastName = $profile->last_name ?? '';
+        $address1 = $profile->address_1 ?? '';
+        $city = $profile->city ?? '';
 
         return [
             'id' => $this->id,
             'provider_id' => $this->provider_id,
             'status' => $this->status,
-            'profile_image' => $this->profile->profile_image,
-            'name' => $this->profile->first_name . ' ' . $this->profile->last_name,
-            'address' => $this->profile->address_1 . ',' . $this->profile->city,
-            'rating' => $rating ?? 0,
+            'profile_image' => $profile->profile_image ?? '',
+            'name' => trim("$firstName $lastName"),
+            'address' => trim("$address1, $city", ', '),
+            'rating' => $rating ? round($rating, 2) : 0,
             'jobs' => $jobs ?? 0,
-            'last_active' => $humanReadable,
-            'talent_type' => $pool_name->talentData->pool_name ?? 'tekhubx',
-            'talent_info' => $this->talentData
+            'last_active' => $lastActiveTime,
+            'talent_type' => $pool->talentData->pool_name ?? 'tekhubx',
+            'talent_info' => $this->talentData,
         ];
     }
 }

@@ -136,6 +136,7 @@ class WorkOrderResource extends JsonResource
             'id' => $this->id,
             'uuid' => $this->uuid,
             'user_id' => $this->user_id,
+            'template' => $this->template,
             'company' => $user_details->company->company_name ?? null,
             'project_title' => $this->project->title ?? null,
             'client_title' => $this->default_client->client_title ?? null,

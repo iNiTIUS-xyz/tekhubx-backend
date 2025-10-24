@@ -388,6 +388,17 @@ class WorkOrderController extends Controller
             $longitude = null;
         }
 
+        $existsingLocation = AdditionalLocation::where('uuid', Auth::user()->uuid)
+            ->where('user_id', Auth::user()->id)
+            ->where('address_line_1', $request->address_line_1)
+            ->where('city', $request->city)
+            ->where('state_id', $request->state_id)
+            ->where('zip_code', $request->zip_code)
+            ->first();
+
+        if ($existsingLocation) {
+            return $existsingLocation->id;
+        }
         if ($request->has('display_name')) {
             $additional_location = new AdditionalLocation();
             $additional_location->uuid = Auth::user()->uuid;
@@ -596,6 +607,87 @@ class WorkOrderController extends Controller
 
         return $shipment_arr;
     }
+    // private function storeDocuments($request)
+    // {
+    //     $allFilePaths = [];
+    //     $uploadedFilePaths = [];
+    //     $selectedFilePaths = [];
+
+    //     try {
+    //         Log::info("Request Input: " . json_encode($request->all()));
+    //         Log::info("Files in Request: " . json_encode($request->file()));
+
+    //         if ($request->hasFile('new_documents_file')) {
+    //             // Check for correct structure: new_documents_file[0][documents_file]
+    //             foreach ($request->file('new_documents_file') as $index => $fileArray) {
+    //                 if ($request->hasFile("new_documents_file.{$index}.documents_file")) {
+    //                     $file = $request->file("new_documents_file.{$index}.documents_file");
+    //                     if ($file->isValid()) {
+    //                         $originalName = $file->getClientOriginalName();
+    //                         $size = $file->getSize();
+    //                         $mimeType = $file->getMimeType();
+    //                         $docuFilePath = $file->store('work/documents', 'public');
+    //                         Log::info("Stored file: {$originalName} at {$docuFilePath}, Size: {$size} bytes, MIME: {$mimeType}");
+
+    //                         $document = DocumentLibrary::create([
+    //                             'uuid' => Auth::user()->uuid,
+    //                             'name' => $originalName,
+    //                             'file_path' => $docuFilePath,
+    //                         ]);
+
+    //                         $uploadedFilePaths[] = $document->file_path;
+    //                     } else {
+    //                         Log::warning("Invalid file at index {$index}: " . $file->getClientOriginalName() . " - Error: " . $file->getErrorMessage());
+    //                     }
+    //                 }
+    //             }
+
+    //             // Fallback for incorrect structure: new_documents_file[0]documents_file
+    //             if ($request->hasFile('new_documents_file.0documents_file')) {
+    //                 $file = $request->file('new_documents_file.0documents_file');
+    //                 if ($file->isValid()) {
+    //                     $originalName = $file->getClientOriginalName();
+    //                     $size = $file->getSize();
+    //                     $mimeType = $file->getMimeType();
+    //                     $docuFilePath = $file->store('work/documents', 'public');
+    //                     Log::info("Stored file (fallback): {$originalName} at {$docuFilePath}, Size: {$size} bytes, MIME: {$mimeType}");
+
+    //                     $document = DocumentLibrary::create([
+    //                         'uuid' => Auth::user()->uuid,
+    //                         'name' => $originalName,
+    //                         'file_path' => $docuFilePath,
+    //                     ]);
+
+    //                     $uploadedFilePaths[] = $document->file_path;
+    //                 } else {
+    //                     Log::warning("Invalid file (fallback): " . $file->getClientOriginalName() . " - Error: " . $file->getErrorMessage());
+    //                 }
+    //             }
+    //         }
+    //         if (empty($uploadedFilePaths)) {
+    //             Log::info("No valid files found in new_documents_file");
+    //         }
+
+    //         if ($request->has('old_documents_id')) {
+    //             $oldDocumentsId = $request->input('old_documents_id');
+    //             if (!is_array($oldDocumentsId)) {
+    //                 $oldDocumentsId = [$oldDocumentsId];
+    //             }
+
+    //             $selectedFilePaths = DocumentLibrary::whereIn('id', $oldDocumentsId)
+    //                 ->pluck('file_path')
+    //                 ->toArray();
+    //             Log::info("Selected File Paths from old_documents_id: " . json_encode($selectedFilePaths));
+    //         }
+
+    //         $allFilePaths = array_merge($uploadedFilePaths, $selectedFilePaths);
+    //         Log::info("All File Paths: " . json_encode($allFilePaths));
+    //     } catch (\Exception $e) {
+    //         Log::error("Error storing documents: " . $e->getMessage());
+    //     }
+
+    //     return $allFilePaths;
+    // }
     private function storeDocuments($request)
     {
         $allFilePaths = [];
@@ -606,76 +698,51 @@ class WorkOrderController extends Controller
             Log::info("Request Input: " . json_encode($request->all()));
             Log::info("Files in Request: " . json_encode($request->file()));
 
-            // Check for correct structure: new_documents_file[0][documents_file]
-            foreach ($request->file('new_documents_file') as $index => $fileArray) {
-                if ($request->hasFile("new_documents_file.{$index}.documents_file")) {
-                    $file = $request->file("new_documents_file.{$index}.documents_file");
-                    if ($file->isValid()) {
-                        $originalName = $file->getClientOriginalName();
-                        $size = $file->getSize();
-                        $mimeType = $file->getMimeType();
-                        $docuFilePath = $file->store('work/documents', 'public');
-                        Log::info("Stored file: {$originalName} at {$docuFilePath}, Size: {$size} bytes, MIME: {$mimeType}");
+            // ✅ Handle new file uploads
+            if ($request->hasFile('new_documents_file')) {
+                foreach ($request->file('new_documents_file') as $index => $fileArray) {
+                    // Some browsers send flat structure; handle both
+                    $file = is_array($fileArray)
+                        ? ($fileArray['documents_file'] ?? null)
+                        : $fileArray;
 
-                        $document = DocumentLibrary::create([
-                            'uuid' => Auth::user()->uuid,
-                            'name' => $originalName,
-                            'file_path' => $docuFilePath,
+                    if ($file && $file->isValid()) {
+                        $originalName = $file->getClientOriginalName();
+                        $path = $file->store('work/documents', 'public');
+
+                        DocumentLibrary::create([
+                            'uuid'      => Auth::user()->uuid,
+                            'name'      => $originalName,
+                            'file_path' => $path,
                         ]);
 
-                        $uploadedFilePaths[] = $document->file_path;
+                        Log::info("Uploaded file: {$originalName} => {$path}");
+                        $uploadedFilePaths[] = $path;
                     } else {
-                        Log::warning("Invalid file at index {$index}: " . $file->getClientOriginalName() . " - Error: " . $file->getErrorMessage());
+                        Log::warning("Invalid or empty file at index {$index}");
                     }
                 }
+            } else {
+                Log::info("No files detected in new_documents_file");
             }
 
-            // Fallback for incorrect structure: new_documents_file[0]documents_file
-            if ($request->hasFile('new_documents_file.0documents_file')) {
-                $file = $request->file('new_documents_file.0documents_file');
-                if ($file->isValid()) {
-                    $originalName = $file->getClientOriginalName();
-                    $size = $file->getSize();
-                    $mimeType = $file->getMimeType();
-                    $docuFilePath = $file->store('work/documents', 'public');
-                    Log::info("Stored file (fallback): {$originalName} at {$docuFilePath}, Size: {$size} bytes, MIME: {$mimeType}");
-
-                    $document = DocumentLibrary::create([
-                        'uuid' => Auth::user()->uuid,
-                        'name' => $originalName,
-                        'file_path' => $docuFilePath,
-                    ]);
-
-                    $uploadedFilePaths[] = $document->file_path;
-                } else {
-                    Log::warning("Invalid file (fallback): " . $file->getClientOriginalName() . " - Error: " . $file->getErrorMessage());
-                }
-            }
-
-            if (empty($uploadedFilePaths)) {
-                Log::info("No valid files found in new_documents_file");
-            }
-
+            // ✅ Handle old document reuse
             if ($request->has('old_documents_id')) {
-                $oldDocumentsId = $request->input('old_documents_id');
-                if (!is_array($oldDocumentsId)) {
-                    $oldDocumentsId = [$oldDocumentsId];
-                }
-
-                $selectedFilePaths = DocumentLibrary::whereIn('id', $oldDocumentsId)
-                    ->pluck('file_path')
-                    ->toArray();
-                Log::info("Selected File Paths from old_documents_id: " . json_encode($selectedFilePaths));
+                $oldIds = (array) $request->input('old_documents_id');
+                $selectedFilePaths = DocumentLibrary::whereIn('id', $oldIds)->pluck('file_path')->toArray();
+                Log::info("Old file paths: " . json_encode($selectedFilePaths));
             }
 
+            // ✅ Merge
             $allFilePaths = array_merge($uploadedFilePaths, $selectedFilePaths);
             Log::info("All File Paths: " . json_encode($allFilePaths));
-        } catch (\Exception $e) {
-            Log::error("Error storing documents: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error("Document Upload Error: " . $e->getMessage());
         }
 
         return $allFilePaths;
     }
+
 
     public function getDocuments()
     {
@@ -897,6 +964,7 @@ class WorkOrderController extends Controller
                 $location_id = $this->getLocationId($request);
             }
 
+            $additionalContactIds = [];
             if (!$request->save_location_id && !$request->remote) {
                 $additionalContactIds = $this->updateAdditionalContacts($request, $workOrder->work_order_unique_id);
             }
@@ -1030,7 +1098,7 @@ class WorkOrderController extends Controller
                 $payment->payment_unique_id = UniqueIdentifierService::generateUniqueIdentifier(new Payment(), 'payment_unique_id', 'uuid');
                 $payment->services_fee = json_encode($service_fees_array);
                 $payment->total_labor = $total;
-                $payment->tax = $taxValue;
+                $payment->tax = $taxValue ?? 0.0;
                 $payment->save();
             }
             $history = HistoryLog::query()
