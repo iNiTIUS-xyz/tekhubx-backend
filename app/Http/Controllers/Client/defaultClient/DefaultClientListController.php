@@ -127,6 +127,12 @@ class DefaultClientListController extends Controller
             $defaultClients = DefaultClientList::query()
                 ->findOrFail($id);
 
+            if (!$defaultClients) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Default Client not found',
+                ], 404);
+            }
             return response()->json([
                 'status' => 'success',
                 'defaultClient' => new DefaultClientListResource($defaultClients),

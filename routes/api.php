@@ -131,44 +131,41 @@ Route::post('admin/logout', [AdminAuthController::class, 'logout']);
 // Admin
 Route::group(['middleware' => 'auth.admin'], function () {
     // profile and dashboard
-    Route::get('admin/dashboard', [AdminAuthController::class, 'allUserDetails']);
-    Route::get('admin/user/{id}/details', [AdminAuthController::class, 'individualUserDetails']);
-    Route::post('user-toggle/{id}', [AdminAuthController::class, 'user_status']);
+    Route::get('admin/dashboard', [AdminAuthController::class, 'allUserDetails'])->name('admin.dashboard');
+    Route::get('admin/user/{id}/details', [AdminAuthController::class, 'individualUserDetails'])->name('admin.user.details');
+    Route::post('user-toggle/{id}', [AdminAuthController::class, 'user_status'])->name('admin.user.status');
 
 
-    Route::get('admin/profile/info', [AdminAuthController::class, 'profileInfo']);
-    Route::post('admin/profile/update', [AdminAuthController::class, 'profileUpdate']);
-    Route::post('admin/password/change', [AdminAuthController::class, 'passwordChange']);
-    // work-category
-    Route::get('/work-category', [CategoryController::class, 'ViewWorkCategory']);
-    Route::post('/work-category', [CategoryController::class, 'WorkCategory']);
-    Route::get('/work-category/edit/{id}', [CategoryController::class, 'EditWorkCategory']);
-    Route::post('/work-category/update/{id}', [CategoryController::class, 'UpdateWorkCategory']);
-
-    Route::delete('/work-categories/{id}', [CategoryController::class, 'deleteCategory'])->name('work-categories.destroy');
+    Route::get('admin/profile/info', [AdminAuthController::class, 'profileInfo'])->name('admin.profile.info');
+    Route::post('admin/profile/update', [AdminAuthController::class, 'profileUpdate'])->name('admin.profile.update');
+    Route::post('admin/password/change', [AdminAuthController::class, 'passwordChange'])->name('admin.password.change');
+    // global work-category
+    Route::get('/work-category', [CategoryController::class, 'ViewWorkCategory'])->name('work-category');
+    Route::post('/work-category', [CategoryController::class, 'WorkCategory'])->name('work-category.store');
+    Route::get('/work-category/edit/{id}', [CategoryController::class, 'EditWorkCategory'])->name('work-category.edit');
+    Route::post('/work-category/update/{id}', [CategoryController::class, 'UpdateWorkCategory'])->name('work-category.update');
+    Route::delete('/work-categories/{id}', [CategoryController::class, 'deleteCategory'])->name('work-category.destroy');
     // work-subcategory
-    Route::get('/work-subcategory', [CategoryController::class, 'ViewWorkSubCategory']);
-    Route::post('/work-subcategory', [CategoryController::class, 'WorkSubCategory']);
-    Route::get('/work-subcategory/edit/{id}', [CategoryController::class, 'EditWorkSubCategory']);
-    Route::post('/work-subcategory/update/{id}', [CategoryController::class, 'UpdateWorkSubCategory']);
-
-    Route::delete('/work-subcategories/{id}', [CategoryController::class, 'deleteSubCategory'])->name('work-subcategories.destroy');
+    Route::get('/work-subcategory', [CategoryController::class, 'ViewWorkSubCategory'])->name('work-subcategory');
+    Route::post('/work-subcategory', [CategoryController::class, 'WorkSubCategory'])->name('work-subcategory.store');
+    Route::get('/work-subcategory/edit/{id}', [CategoryController::class, 'EditWorkSubCategory'])->name('work-subcategory.edit');
+    Route::post('/work-subcategory/update/{id}', [CategoryController::class, 'UpdateWorkSubCategory'])->name('work-subcategory.update');
+    Route::delete('/work-subcategories/{id}', [CategoryController::class, 'deleteSubCategory'])->name('work-subcategory.destroy');
 
     // service
+    Route::post('/service', [ServiceController::class, 'Service'])->name('service.store');
+    Route::get('/service', [ServiceController::class, 'ViewService'])->name('service');
+    Route::get('/service/edit/{id}', [ServiceController::class, 'EditService'])->name('service.edit');
+    Route::post('/service/update/{id}', [ServiceController::class, 'UpdateService'])->name('service.update');
+    Route::delete('/services/{id}', [ServiceController::class, 'deleteService'])->name('service.destroy');
 
-    Route::post('/service', [ServiceController::class, 'Service']);
-    Route::get('/service', [ServiceController::class, 'ViewService']);
-    Route::get('/service/edit/{id}', [ServiceController::class, 'EditService']);
-    Route::post('/service/update/{id}', [ServiceController::class, 'UpdateService']);
-
-    Route::delete('/services/{id}', [ServiceController::class, 'deleteService'])->name('services.destroy');
     //Service Fees
-    Route::get('service-fees', [ServiceFeesController::class, 'index']);
-    Route::post('service-fees/store', [ServiceFeesController::class, 'store']);
-    Route::get('service-fees/edit/{id}', [ServiceFeesController::class, 'edit']);
-    Route::post('service-fees/update/{id}', [ServiceFeesController::class, 'update']);
-
+    Route::get('service-fees', [ServiceFeesController::class, 'index'])->name('service-fees');
+    Route::post('service-fees/store', [ServiceFeesController::class, 'store'])->name('service-fees.store');
+    Route::get('service-fees/edit/{id}', [ServiceFeesController::class, 'edit'])->name('service-fees.edit');
+    Route::post('service-fees/update/{id}', [ServiceFeesController::class, 'update'])->name('service-fees.update');
     Route::delete('/service-fees/{id}', [ServiceFeesController::class, 'deleteServiceFee'])->name('service-fees.destroy');
+
     //Qualification Type
     Route::resource('qualification', QualificationController::class);
     Route::resource('qualification-sub-cat', QualificationSubCategoryController::class);
@@ -185,21 +182,21 @@ Route::group(['middleware' => 'auth.admin'], function () {
     Route::resource('quote', QuoteController::class);
     // work step details and others
 
-    Route::get('get-work-step-details/list', [WorkStepDetailController::class, 'workStepList']);
-    Route::post('get-work-step-details/store', [WorkStepDetailController::class, 'workStepStore']);
-    Route::get('get-work-step-details/edit/{id}', [WorkStepDetailController::class, 'workStepEdit']);
-    Route::post('get-work-step-details/update/{id}', [WorkStepDetailController::class, 'workStepUpdate']);
-    Route::get('get-work-step-details/delete/{id}', [WorkStepDetailController::class, 'workStepDelete']);
+    Route::get('get-work-step-details/list', [WorkStepDetailController::class, 'workStepList'])->name('work-step-details.list');
+    Route::post('get-work-step-details/store', [WorkStepDetailController::class, 'workStepStore'])->name('work-step-details.store');
+    Route::get('get-work-step-details/edit/{id}', [WorkStepDetailController::class, 'workStepEdit'])->name('work-step-details.edit');
+    Route::post('get-work-step-details/update/{id}', [WorkStepDetailController::class, 'workStepUpdate'])->name('work-step-details.update');
+    Route::get('get-work-step-details/delete/{id}', [WorkStepDetailController::class, 'workStepDelete'])->name('work-step-details.delete');
 
     // partner contact
-    Route::get('partner/contact-list', [WorkStepDetailController::class, 'partnerContactList']);
-    Route::get('partner/contact-list/{id}/view', [WorkStepDetailController::class, 'partnerContactView']);
-    Route::get('partner/contact-list/{id}/delete', [WorkStepDetailController::class, 'partnerContactDelete']);
+    Route::get('partner/contact-list', [WorkStepDetailController::class, 'partnerContactList'])->name('partner-contact.list');
+    Route::get('partner/contact-list/{id}/view', [WorkStepDetailController::class, 'partnerContactView'])->name('partner-contact.view');
+    Route::get('partner/contact-list/{id}/delete', [WorkStepDetailController::class, 'partnerContactDelete'])->name('partner-contact.delete');
 
     // contact us
-    Route::get('contact-us-list', [WorkStepDetailController::class, 'contactUsList']);
-    Route::get('contact-us-list/{id}/view', [WorkStepDetailController::class, 'contactUsView']);
-    Route::get('contact-us-list/{id}/delete', [WorkStepDetailController::class, 'contactUsDelete']);
+    Route::get('contact-us-list', [WorkStepDetailController::class, 'contactUsList'])->name('contact-us.list');
+    Route::get('contact-us-list/{id}/view', [WorkStepDetailController::class, 'contactUsView'])->name('contact-us.view');
+    Route::get('contact-us-list/{id}/delete', [WorkStepDetailController::class, 'contactUsDelete'])->name('contact-us.delete');
 
     // frontend service category
     Route::resource('service-category', FrontendServiceCategoryController::class);
@@ -231,50 +228,50 @@ Route::group(['middleware' => 'auth.admin'], function () {
     Route::resource('supports', SupportController::class);
     // others
 
-    Route::get('get-subscription-details', [TransactionReportController::class, 'getSubscription']);
-    Route::get('get-client-payment-details', [TransactionReportController::class, 'getPayment']);
-    Route::get('get-provider-payment-details', [TransactionReportController::class, 'getProviderPaymentShowInAdmin']);
-    Route::get('get-client-point-request', [TransactionReportController::class, 'pointRequestByClient']);
-    Route::post('update-client-point-request/{id}', [TransactionReportController::class, 'pointRequestUpdate']);
+    Route::get('get-subscription-details', [TransactionReportController::class, 'getSubscription'])->name('get-subscription-details');
+    Route::get('get-client-payment-details', [TransactionReportController::class, 'getPayment'])->name('get-client-payment-details');
+    Route::get('get-provider-payment-details', [TransactionReportController::class, 'getProviderPaymentShowInAdmin'])->name('get-provider-payment-details');
+    Route::get('get-client-point-request', [TransactionReportController::class, 'pointRequestByClient'])->name('get-client-point-request');
+    Route::post('update-client-point-request/{id}', [TransactionReportController::class, 'pointRequestUpdate'])->name('update-client-point-request');
 
-    Route::post('license-and-certificate-approval', [TransactionReportController::class, 'licenseAndCertificateApproval']);
-    Route::get('feedback', [FeedbackController::class, 'index']);
+    Route::post('license-and-certificate-approval', [TransactionReportController::class, 'licenseAndCertificateApproval'])->name('license-and-certificate-approval');
+    Route::get('feedback', [FeedbackController::class, 'index'])->name('feedback.index');
     // staff
     Route::resource('staff', StaffController::class);
 
     Route::prefix('feedback-reason')->group(function () {
-        Route::post('/', [FeedbackController::class, 'reason_store']);
-        Route::get('/{id}', [FeedbackController::class, 'reason_edit']);
-        Route::put('/{id}', [FeedbackController::class, 'reason_update']);
-        Route::delete('/{id}', [FeedbackController::class, 'reason_destroy']);
+        Route::post('/', [FeedbackController::class, 'reason_store'])->name('reason.store');
+        Route::get('/{id}', [FeedbackController::class, 'reason_edit'])->name('reason.edit');
+        Route::put('/{id}', [FeedbackController::class, 'reason_update'])->name('reason.update');
+        Route::delete('/{id}', [FeedbackController::class, 'reason_destroy'])->name('reason.destroy');
     });
     Route::delete('/feedback/{id}', [FeedbackController::class, 'deleteFeedback'])->name('feedback.destroy');
     // documentation
     Route::resource('documentation', DocumentationController::class);
-    Route::get('parent/documentation-list', [DocumentationController::class, 'parent']);
+    Route::get('parent/documentation-list', [DocumentationController::class, 'parent'])->name('parent.documentation.list');
 
-    //social media links
-    Route::get('all-social-media', [SocialMediaController::class, 'index']);
-    Route::post('/social-media', [SocialMediaController::class, 'store']);
-    Route::get('/social-media/{id}', [SocialMediaController::class, 'show']);
-    Route::put('/social-media/{id}', [SocialMediaController::class, 'update']);
-    Route::delete('/social-media/{id}', [SocialMediaController::class, 'destroy']);
+    //social media
+    Route::get('all-social-media', [SocialMediaController::class, 'index'])->name('social-media.index');
+    Route::post('/social-media', [SocialMediaController::class, 'store'])->name('social-media.store');
+    Route::get('/social-media/{id}', [SocialMediaController::class, 'show'])->name('social-media.show');
+    Route::put('/social-media/{id}', [SocialMediaController::class, 'update'])->name('social-media.update');
+    Route::delete('/social-media/{id}', [SocialMediaController::class, 'destroy'])->name('social-media.destroy');
 });
 
 //Client
 Route::group(['middleware' => 'auth.client'], function () {
     //dashboard
-    Route::get('client-dashboard', [CommonController::class, 'clientDashboard']);
-    Route::get('work-order-history/{work_order_unique_id}', [CommonController::class, 'clinetHistoryLog']);
-    Route::get('graph-data', [CommonController::class, 'graphData']);
+    Route::get('client-dashboard', [CommonController::class, 'clientDashboard'])->name('client.dashboard');
+    Route::get('work-order-history/{work_order_unique_id}', [CommonController::class, 'clinetHistoryLog'])->name('work.order.history');
+    Route::get('graph-data', [CommonController::class, 'graphData'])->name('graph.data');
 
     //location
-    Route::get('location', [LocationController::class, 'index']);
-    Route::post('location', [LocationController::class, 'store']);
-    Route::get('location/edit/{id}', [LocationController::class, 'edit']);
-    Route::post('location/update/{id}', [LocationController::class, 'update']);
-    Route::post('import/file/location', [LocationController::class, 'locationImport']);
-    Route::get('download/file/location', [LocationController::class, 'download']);
+    Route::get('location', [LocationController::class, 'index'])->name('location.index');
+    Route::post('location', [LocationController::class, 'store'])->name('location.store');
+    Route::get('location/edit/{id}', [LocationController::class, 'edit'])->name('location.edit');
+    Route::post('location/update/{id}', [LocationController::class, 'update'])->name('location.update');
+    Route::post('import/file/location', [LocationController::class, 'locationImport'])->name('import.location');
+    Route::get('download/file/location', [LocationController::class, 'download'])->name('download.location');
 
     Route::delete('location/{id}', [LocationController::class, 'destroy'])->name('location.destroy');
     //Project
@@ -289,6 +286,7 @@ Route::group(['middleware' => 'auth.client'], function () {
     Route::post('find-template', [TemplateController::class, 'FindTemplate']);
     //Default Client
     Route::resource('default-client', DefaultClientListController::class);
+    Route::post('default-client/{id}', DefaultClientListController::class, 'update');
     Route::post('import/default-client', [DefaultClientListController::class, 'import']);
     Route::get('excel/download', [DefaultClientListController::class, 'excelDownload']);
     //Work Order Manage

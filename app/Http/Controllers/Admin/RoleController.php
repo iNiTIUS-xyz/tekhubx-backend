@@ -73,7 +73,7 @@ class RoleController extends Controller
                 ]);
             }
 
-            if($provider->organization_role == "Provider")
+            if($provider->organization_role == "Provider" || $provider->organization_role == "Provider Company")
             {
                 return response()->json([
                     'status' => 'success',
@@ -88,11 +88,6 @@ class RoleController extends Controller
                     'permissions' => $adminPermissions,
                 ]);
             }
-
-            // return response()->json([
-            //     'status' => 'success',
-            //     'permissions' => $adminPermissions,
-            // ]);
 
         } catch (\Exception $error) {
 

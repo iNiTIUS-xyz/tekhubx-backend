@@ -11,6 +11,8 @@ use App\Utils\GlobalConstant;
 use App\Models\ProviderCheckout;
 use App\Helpers\ApiResponseHelper;
 use App\Models\AdditionalLocation;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -116,6 +118,94 @@ class WorkOrderCheckoutController extends Controller
         ]);
     }
 
+    // public function markOnMyWay(Request $request, $work_order_unique_id)
+    // {
+    //     $rules = [
+    //         'latitude' => 'required|numeric',
+    //         'longitude' => 'required|numeric',
+    //         'speed' => 'nullable|numeric',
+    //         'heading' => 'nullable|numeric',
+    //         'accuracy' => 'nullable|numeric',
+    //     ];
+
+    //     $validator = Validator::make($request->all(), $rules);
+
+    //     if ($validator->fails()) {
+    //         $formattedErrors = ApiResponseHelper::formatErrors(ApiResponseHelper::VALIDATION_ERROR, $validator->errors()->toArray());
+    //         return response()->json([
+    //             'errors' => $formattedErrors,
+    //             'payload' => null,
+    //         ], 500);
+    //     }
+
+    //     $workOrder = WorkOrder::where('work_order_unique_id', $work_order_unique_id)->first();
+    //     $provider_checkout = ProviderCheckout::where('work_order_unique_id', $work_order_unique_id)->first();
+    //     if (!$provider_checkout) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Work order start time not found.',
+    //         ], 404);
+    //     }
+    //     // Ensure the provider is assigned and can mark "On My Way"
+    //     if ($provider_checkout->confirmed !== 'yes') {
+    //         return response()->json(['error' => 'Work Order must be confirmed before marking "On My Way".'], 400);
+    //     }
+
+    //     if ($provider_checkout->on_my_way === 'yes') {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'You are already marked as "On My Way".'
+    //         ], 200);
+    //     }
+
+    //     $tasks = json_decode($workOrder->tasks, true);
+    //     $notificationEmails = collect($tasks)
+    //         ->firstWhere('name', 'Set Start Time')['notification_email'] ?? [];
+
+    //     $location = LiveTracking::create([
+    //         'work_order_unique_id' => $work_order_unique_id,
+    //         'provider_id' => Auth::id(),
+    //         'latitude' => $request->latitude,
+    //         'longitude' => $request->longitude,
+    //         'speed' => $request->speed ?? 0,
+    //         'heading' => $request->heading ?? 0,
+    //         'accuracy' => $request->accuracy,
+    //         'status' => 'on_my_way',
+    //         'tracked_at' => now(),
+    //     ]);
+
+    //     // Broadcast the location update
+    //     broadcast(new ProviderLocationUpdated($location))->toOthers();
+
+    //     foreach ($notificationEmails as $email) {
+    //         Mail::send('emails.tracking', [
+    //             'taskName' => 'Set Start Time',
+    //             'startTime' => now()->format('Y-m-d H:i:s')
+    //         ], function ($message) use ($email) {
+    //             $message->to($email)
+    //                 ->subject('Task "On My Way" has started');
+    //         });
+    //     }
+
+    //     $provider_checkout->update([
+    //         'on_my_way' => 'yes',
+    //         'on_my_way_at' => now(),
+    //     ]);
+
+    //     $history = new HistoryLog();
+    //     $history->provider_id = Auth::user()->id;
+    //     $history->work_order_unique_id = $work_order_unique_id;
+    //     $history->description = 'On My Way Set';
+    //     $history->type = 'provider';
+    //     $history->date_time = now();
+    //     $history->save();
+
+    //     return response()->json([
+    //         'status' => 'success',
+    //         'message' => 'Work Order status updated to On My Way.',
+    //         'tracking_enabled' => true,
+    //     ]);
+    // }
     public function markOnMyWay(Request $request, $work_order_unique_id)
     {
         $rules = [
@@ -136,75 +226,193 @@ class WorkOrderCheckoutController extends Controller
             ], 500);
         }
 
-        $workOrder = WorkOrder::where('work_order_unique_id', $work_order_unique_id)->first();
-        $provider_checkout = ProviderCheckout::where('work_order_unique_id', $work_order_unique_id)->first();
-        if (!$provider_checkout) {
+        try {
+            DB::beginTransaction();
+
+            $workOrder = WorkOrder::where('work_order_unique_id', $work_order_unique_id)->first();
+            $provider_checkout = ProviderCheckout::where('work_order_unique_id', $work_order_unique_id)->first();
+            if (!$provider_checkout) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Work order start time not found.',
+                ], 404);
+            }
+
+            // Ensure the provider is assigned and can mark "On My Way"
+            if ($provider_checkout->confirmed !== 'yes') {
+                return response()->json(['error' => 'Work Order must be confirmed before marking "On My Way".'], 400);
+            }
+
+            if ($provider_checkout->on_my_way === 'yes') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You are already marked as "On My Way".'
+                ], 200);
+            }
+
+            $tasks = json_decode($workOrder->tasks, true);
+            $notificationEmails = collect($tasks)
+                ->firstWhere('name', 'Set Start Time')['notification_email'] ?? [];
+
+            $location = LiveTracking::create([
+                'work_order_unique_id' => $work_order_unique_id,
+                'provider_id' => Auth::id(),
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'speed' => $request->speed ?? 0,
+                'heading' => $request->heading ?? 0,
+                'accuracy' => $request->accuracy,
+                'status' => 'on_my_way',
+                'tracked_at' => now(),
+            ]);
+
+            // Broadcast the location update
+            broadcast(new ProviderLocationUpdated($location))->toOthers();
+
+            foreach ($notificationEmails as $email) {
+                Mail::send('emails.tracking', [
+                    'taskName' => 'Set Start Time',
+                    'startTime' => now()->format('Y-m-d H:i:s')
+                ], function ($message) use ($email) {
+                    $message->to($email)
+                        ->subject('Task "On My Way" has started');
+                });
+            }
+
+            $provider_checkout->update([
+                'on_my_way' => 'yes',
+                'on_my_way_at' => now(),
+            ]);
+
+            $history = new HistoryLog();
+            $history->provider_id = Auth::user()->id;
+            $history->work_order_unique_id = $work_order_unique_id;
+            $history->description = 'On My Way Set';
+            $history->type = 'provider';
+            $history->date_time = now();
+            $history->save();
+
+            DB::commit();
+
             return response()->json([
-                'status' => 'error',
-                'message' => 'Work order start time not found.',
-            ], 404);
-        }
-        // Ensure the provider is assigned and can mark "On My Way"
-        if ($provider_checkout->confirmed !== 'yes') {
-            return response()->json(['error' => 'Work Order must be confirmed before marking "On My Way".'], 400);
-        }
+                'status' => 'success',
+                'message' => 'Work Order status updated to On My Way.',
+                'tracking_enabled' => true,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Mark On My Way Failed: ' . $e->getMessage());
 
-        if ($provider_checkout->on_my_way === 'yes') {
             return response()->json([
-                'status' => 'error',
-                'message' => 'You are already marked as "On My Way".'
-            ], 200);
+                'errors' => ApiResponseHelper::formatErrors(
+                    ApiResponseHelper::SYSTEM_ERROR,
+                    [config('app.debug') ? $e->getMessage() : 'Server Error']
+                ),
+                'payload' => null,
+            ], 500);
         }
-
-        $tasks = json_decode($workOrder->tasks, true);
-        $notificationEmails = collect($tasks)
-            ->firstWhere('name', 'Set Start Time')['notification_email'] ?? [];
-
-        $location = LiveTracking::create([
-            'work_order_unique_id' => $work_order_unique_id,
-            'provider_id' => Auth::id(),
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'speed' => $request->speed ?? 0,
-            'heading' => $request->heading ?? 0,
-            'accuracy' => $request->accuracy,
-            'status' => 'on_my_way',
-            'tracked_at' => now(),
-        ]);
-
-        // Broadcast the location update
-        broadcast(new ProviderLocationUpdated($location))->toOthers();
-
-        foreach ($notificationEmails as $email) {
-            Mail::send('emails.tracking', [
-                'taskName' => 'Set Start Time',
-                'startTime' => now()->format('Y-m-d H:i:s')
-            ], function ($message) use ($email) {
-                $message->to($email)
-                    ->subject('Task "On My Way" has started');
-            });
-        }
-
-        $provider_checkout->update([
-            'on_my_way' => 'yes',
-            'on_my_way_at' => now(),
-        ]);
-
-        $history = new HistoryLog();
-        $history->provider_id = Auth::user()->id;
-        $history->work_order_unique_id = $work_order_unique_id;
-        $history->description = 'On My Way Set';
-        $history->type = 'provider';
-        $history->date_time = now();
-        $history->save();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Work Order status updated to On My Way.',
-            'tracking_enabled' => true,
-        ]);
     }
 
+    // public function checkIn(Request $request, $work_order_unique_id)
+    // {
+    //     // 1. Validate input data
+    //     $rules = [
+    //         'latitude' => 'required|numeric',
+    //         'longitude' => 'required|numeric',
+    //         'check_in_time' => 'required|date',
+    //     ];
+
+    //     $validator = Validator::make($request->all(), $rules);
+
+    //     if ($validator->fails()) {
+    //         $formattedErrors = ApiResponseHelper::formatErrors(ApiResponseHelper::VALIDATION_ERROR, $validator->errors()->toArray());
+    //         return response()->json([
+    //             'errors' => $formattedErrors,
+    //             'payload' => null,
+    //         ], 500);
+    //     }
+
+    //     // 2. Get the work order details
+    //     $provider_checkout = ProviderCheckout::where('work_order_unique_id', $work_order_unique_id)->first();
+    //     if (!$provider_checkout) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Work order start time not found.',
+    //         ], 404);
+    //     }
+    //     $workOrder = WorkOrder::where('work_order_unique_id', $work_order_unique_id)->first();
+
+    //     $tasks = json_decode($workOrder->tasks, true);
+    //     $notificationEmails = collect($tasks)
+    //         ->firstWhere('name', 'Check in')['notification_email'] ?? [];
+
+    //     foreach ($notificationEmails as $email) {
+    //         Mail::send('emails.task_started', [
+    //             'taskName' => 'Check in',
+    //             'startTime' => now()->format('Y-m-d H:i:s')
+    //         ], function ($message) use ($email) {
+    //             $message->to($email)
+    //                 ->subject('Task "Check in" has started');
+    //         });
+    //     }
+    //     // 3. Calculate time difference
+    //     if ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[0]) {
+    //         $start_time = $workOrder->schedule_time;
+    //     }
+    //     if ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[1]) {
+    //         $start_time = $workOrder->schedule_time_between_1;
+    //     }
+    //     if ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[2]) {
+    //         $start_time = $workOrder->between_time;
+    //     }
+    //     $scheduledStartTime = Carbon::parse($start_time);
+    //     $checkInTime = Carbon::parse($request->check_in_time);
+    //     $timeDifference = $checkInTime->diffInMinutes($scheduledStartTime, false);
+
+
+    //     // 4. Determine Check-In Status
+    //     if ($timeDifference < -30) {
+    //         $status = 'Too Early';
+    //         $timelinessImpact = -1; // Decrease Timeliness Rate
+    //     } elseif ($timeDifference >= -30 && $timeDifference <= 15) {
+    //         $status = 'On-Time';
+    //         $timelinessImpact = 1; // Increase Timeliness Rate
+    //     } else {
+    //         $status = 'Late';
+    //         $timelinessImpact = -1; // Decrease Timeliness Rate
+    //     }
+
+    //     // 5. Log the check-in
+    //     $provider_checkout->update([
+    //         'check_in_time' => $request->check_in_time,
+    //         'is_check_in' => 'yes',
+    //         'timeliness_rate' => $timelinessImpact,
+    //         'status' => $status
+    //     ]);
+
+    //     $history = new HistoryLog();
+    //     $history->provider_id = Auth::user()->id;
+    //     $history->work_order_unique_id = $work_order_unique_id;
+    //     $history->description = 'Check In';
+    //     $history->type = 'provider';
+    //     $history->date_time = now();
+    //     $history->save();
+
+    //     // 6. GPS validation (optional)
+    //     if ($workOrder->location_id == "remote") {
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Work Order location is remote.'
+    //         ]);
+    //     } else {
+    //         $additional_locations = AdditionalLocation::find($workOrder->location_id);
+    //         $distance = $this->calculateDistance($additional_locations->latitude, $additional_locations->longitude, $request->latitude, $request->longitude);
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'You are more than 1 mile away from the work order location.'
+    //         ]);
+    //     }
+    // }
     public function checkIn(Request $request, $work_order_unique_id)
     {
         // 1. Validate input data
@@ -224,85 +432,102 @@ class WorkOrderCheckoutController extends Controller
             ], 500);
         }
 
-        // 2. Get the work order details
-        $provider_checkout = ProviderCheckout::where('work_order_unique_id', $work_order_unique_id)->first();
-        if (!$provider_checkout) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Work order start time not found.',
-            ], 404);
-        }
-        $workOrder = WorkOrder::where('work_order_unique_id', $work_order_unique_id)->first();
+        try {
+            DB::beginTransaction();
 
-        $tasks = json_decode($workOrder->tasks, true);
-        $notificationEmails = collect($tasks)
-            ->firstWhere('name', 'Check in')['notification_email'] ?? [];
+            // 2. Get the work order details
+            $provider_checkout = ProviderCheckout::where('work_order_unique_id', $work_order_unique_id)->first();
+            if (!$provider_checkout) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Work order start time not found.',
+                ], 404);
+            }
+            $workOrder = WorkOrder::where('work_order_unique_id', $work_order_unique_id)->first();
 
-        foreach ($notificationEmails as $email) {
-            Mail::send('emails.task_started', [
-                'taskName' => 'Check in',
-                'startTime' => now()->format('Y-m-d H:i:s')
-            ], function ($message) use ($email) {
-                $message->to($email)
-                    ->subject('Task "Check in" has started');
-            });
-        }
-        // 3. Calculate time difference
-        if ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[0]) {
-            $start_time = $workOrder->schedule_time;
-        }
-        if ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[1]) {
-            $start_time = $workOrder->schedule_time_between_1;
-        }
-        if ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[2]) {
-            $start_time = $workOrder->between_time;
-        }
-        $scheduledStartTime = Carbon::parse($start_time);
-        $checkInTime = Carbon::parse($request->check_in_time);
-        $timeDifference = $checkInTime->diffInMinutes($scheduledStartTime, false);
+            $tasks = json_decode($workOrder->tasks, true);
+            $notificationEmails = collect($tasks)
+                ->firstWhere('name', 'Check in')['notification_email'] ?? [];
 
+            foreach ($notificationEmails as $email) {
+                Mail::send('emails.task_started', [
+                    'taskName' => 'Check in',
+                    'startTime' => now()->format('Y-m-d H:i:s')
+                ], function ($message) use ($email) {
+                    $message->to($email)
+                        ->subject('Task "Check in" has started');
+                });
+            }
 
-        // 4. Determine Check-In Status
-        if ($timeDifference < -30) {
-            $status = 'Too Early';
-            $timelinessImpact = -1; // Decrease Timeliness Rate
-        } elseif ($timeDifference >= -30 && $timeDifference <= 15) {
-            $status = 'On-Time';
-            $timelinessImpact = 1; // Increase Timeliness Rate
-        } else {
-            $status = 'Late';
-            $timelinessImpact = -1; // Decrease Timeliness Rate
-        }
+            // 3. Calculate time difference
+            if ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[0]) {
+                $start_time = $workOrder->schedule_time;
+            }
+            if ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[1]) {
+                $start_time = $workOrder->schedule_time_between_1;
+            }
+            if ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[2]) {
+                $start_time = $workOrder->between_time;
+            }
+            $scheduledStartTime = Carbon::parse($start_time);
+            $checkInTime = Carbon::parse($request->check_in_time);
+            $timeDifference = $checkInTime->diffInMinutes($scheduledStartTime, false);
 
-        // 5. Log the check-in
-        $provider_checkout->update([
-            'check_in_time' => $request->check_in_time,
-            'is_check_in' => 'yes',
-            'timeliness_rate' => $timelinessImpact,
-            'status' => $status
-        ]);
+            // 4. Determine Check-In Status
+            if ($timeDifference < -30) {
+                $status = 'Too Early';
+                $timelinessImpact = -1; // Decrease Timeliness Rate
+            } elseif ($timeDifference >= -30 && $timeDifference <= 15) {
+                $status = 'On-Time';
+                $timelinessImpact = 1; // Increase Timeliness Rate
+            } else {
+                $status = 'Late';
+                $timelinessImpact = -1; // Decrease Timeliness Rate
+            }
 
-        $history = new HistoryLog();
-        $history->provider_id = Auth::user()->id;
-        $history->work_order_unique_id = $work_order_unique_id;
-        $history->description = 'Check In';
-        $history->type = 'provider';
-        $history->date_time = now();
-        $history->save();
-
-        // 6. GPS validation (optional)
-        if ($workOrder->location_id == "remote") {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Work Order location is remote.'
+            // 5. Log the check-in
+            $provider_checkout->update([
+                'check_in_time' => $request->check_in_time,
+                'is_check_in' => 'yes',
+                'timeliness_rate' => $timelinessImpact,
+                'status' => $status
             ]);
-        } else {
-            $additional_locations = AdditionalLocation::find($workOrder->location_id);
-            $distance = $this->calculateDistance($additional_locations->latitude, $additional_locations->longitude, $request->latitude, $request->longitude);
+
+            $history = new HistoryLog();
+            $history->provider_id = Auth::user()->id;
+            $history->work_order_unique_id = $work_order_unique_id;
+            $history->description = 'Check In';
+            $history->type = 'provider';
+            $history->date_time = now();
+            $history->save();
+
+            // 6. GPS validation (optional)
+            if ($workOrder->location_id == "remote") {
+                DB::commit();
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Work Order location is remote.'
+                ]);
+            } else {
+                $additional_locations = AdditionalLocation::find($workOrder->location_id);
+                $distance = $this->calculateDistance($additional_locations->latitude, $additional_locations->longitude, $request->latitude, $request->longitude);
+                DB::commit();
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'You are more than 1 mile away from the work order location.'
+                ]);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Check In Failed: ' . $e->getMessage());
+
             return response()->json([
-                'status' => 'success',
-                'message' => 'You are more than 1 mile away from the work order location.'
-            ]);
+                'errors' => ApiResponseHelper::formatErrors(
+                    ApiResponseHelper::SYSTEM_ERROR,
+                    [config('app.debug') ? $e->getMessage() : 'Server Error']
+                ),
+                'payload' => null,
+            ], 500);
         }
     }
 
@@ -375,7 +600,7 @@ class WorkOrderCheckoutController extends Controller
         $user = Auth::user();
         $isAuthorized = false;
 
-         if ($user->organization_role === 'Client' && $workOrder->user_id == $user->id) {
+        if ($user->organization_role === 'Client' && $workOrder->user_id == $user->id) {
             $isAuthorized = true;
         }
 

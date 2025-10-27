@@ -19,7 +19,7 @@ class DefaultClientListResource extends JsonResource
             'id' => $this->id,
             'client_title' => $this->client_title,
             'client_manager_id' => $this->client_manager_id,
-            'logo' => $this->logo,
+            'logo' => $this->logo ? asset(Storage::url($this->logo)) : null,
             'website' => $this->website,
             'notes' => $this->notes,
             'company_name_logo' => $this->company_name_logo,

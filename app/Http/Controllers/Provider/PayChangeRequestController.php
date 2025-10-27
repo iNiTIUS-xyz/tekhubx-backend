@@ -23,13 +23,6 @@ class PayChangeRequestController extends Controller
     public function __construct(NotificationSentClass $sentNotification)
     {
         $this->sentNotification = $sentNotification;
-
-
-        // $this->middleware('permission:pay_change_request,pay_change_request.list')->only(['index']);
-        $this->middleware('permission:pay_change_request.create_store')->only(['store']);
-        $this->middleware('permission:pay_change_request.edit')->only(['edit']);
-        $this->middleware('permission:pay_change_request.update')->only(['update']);
-        $this->middleware('permission:pay_change_request.delete')->only(['destroy']);
     }
 
     public function index()

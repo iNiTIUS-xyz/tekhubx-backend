@@ -121,7 +121,7 @@ class ClientAuthController extends Controller
                         return response()->json([
                             'status' => 'success',
                             'message' => 'Login Successfully',
-                            // 'summery_flag' => $summery_flag,
+                            'summery_flag' => $summery_flag,
                             'user' => new AuthenticateUserResource($user),
                             'authorization' => [
                                 'access_token' => $token,
