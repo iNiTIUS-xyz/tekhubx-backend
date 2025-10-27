@@ -92,8 +92,8 @@ class DefaultClientListController extends Controller
             $defaultClients->zip_code = $request->zip_code;
             $defaultClients->country_id = $request->country_id;
             $defaultClients->location_type = $request->location_type;
-            $defaultClients->company_name_logo = $request->company_name_logo ? true : false;
-            $defaultClients->client_name_logo = $request->client_name_logo ? true : false;
+            $defaultClients->company_name_logo = $request->company_name_logo;
+            $defaultClients->client_name_logo = $request->client_name_logo;
 
             if ($request->hasFile("logo")) {
                 $logo_url = $this->fileUpload->imageUploader($request->file('logo'), 'defaultClient', 200, 200);

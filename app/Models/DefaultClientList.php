@@ -33,7 +33,10 @@ class DefaultClientList extends Model
         'work_orders',
         'status',
     ];
-
+    protected $casts = [
+        'company_name_logo' => 'boolean',
+        'client_name_logo' => 'boolean',
+    ];
     public function state()
     {
         return $this->belongsTo(State::class);
