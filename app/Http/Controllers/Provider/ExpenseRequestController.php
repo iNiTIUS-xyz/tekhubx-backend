@@ -298,7 +298,7 @@ class ExpenseRequestController extends Controller
 
     public function workOrderExpenseRequest($work_order_unique_id)
     {
-        $expenseRequests = ExpenseRequest::query()
+        $expenseRequests = ExpenseRequest::with('expenseCategory')
             ->where('work_order_unique_id', $work_order_unique_id)
             ->get();
 
