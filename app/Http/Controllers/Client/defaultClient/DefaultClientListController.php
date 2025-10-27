@@ -92,8 +92,16 @@ class DefaultClientListController extends Controller
             $defaultClients->zip_code = $request->zip_code;
             $defaultClients->country_id = $request->country_id;
             $defaultClients->location_type = $request->location_type;
-            $defaultClients->company_name_logo = $request->company_name_logo;
-            $defaultClients->client_name_logo = $request->client_name_logo;
+            // $defaultClients->company_name_logo = $request->company_name_logo;
+            // $defaultClients->client_name_logo = $request->client_name_logo;
+            $defaultClients->company_name_logo = isset($request->company_name_logo)
+                ? (int) filter_var($request->company_name_logo, FILTER_VALIDATE_BOOLEAN)
+                : 0;
+
+            $defaultClients->client_name_logo = isset($request->client_name_logo)
+                ? (int) filter_var($request->client_name_logo, FILTER_VALIDATE_BOOLEAN)
+                : 0;
+
 
             if ($request->hasFile("logo")) {
                 $logo_url = $this->fileUpload->imageUploader($request->file('logo'), 'defaultClient', 200, 200);
@@ -203,8 +211,12 @@ class DefaultClientListController extends Controller
             $defaultClients->zip_code = $request->zip_code ?? $defaultClients->zip_code;
             $defaultClients->country_id = $request->country_id ?? $defaultClients->country_id;
             $defaultClients->location_type = $request->location_type ?? $defaultClients->location_type;
-            $defaultClients->company_name_logo = $request->company_name_logo ?? $defaultClients->company_name_logo;
-            $defaultClients->client_name_logo = $request->client_name_logo ?? $defaultClients->client_name_logo;
+            // $defaultClients->company_name_logo = $request->company_name_logo ?? $defaultClients->company_name_logo;
+            // $defaultClients->client_name_logo = $request->client_name_logo ?? $defaultClients->client_name_logo;
+            $defaultClients->company_name_logo = (int) filter_var($request->company_name_logo, FILTER_VALIDATE_BOOLEAN) ?? $defaultClients->company_name_logo;
+
+            $defaultClients->client_name_logo = (int) filter_var($request->client_name_logo, FILTER_VALIDATE_BOOLEAN) ?? $defaultClients->client_name_logo;
+
 
             if ($request->hasFile("logo")) {
                 $this->fileUpload->fileUnlink($defaultClients->logo);
@@ -249,7 +261,7 @@ class DefaultClientListController extends Controller
                 ], 404);
             }
 
-             $work_orderExists = WorkOrder::query()
+            $work_orderExists = WorkOrder::query()
                 ->where('uuid', Auth::user()->uuid)
                 ->where('default_client_id', $defaultClient->id)
                 ->exists();
