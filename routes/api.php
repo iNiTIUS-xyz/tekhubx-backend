@@ -286,7 +286,8 @@ Route::group(['middleware' => 'auth.client'], function () {
     Route::post('find-template', [TemplateController::class, 'FindTemplate']);
     //Default Client
     Route::resource('default-client', DefaultClientListController::class);
-    Route::post('default-client/{id}', DefaultClientListController::class, 'update');
+    Route::post('default-client/{id}', [DefaultClientListController::class, 'update']);
+
     Route::post('import/default-client', [DefaultClientListController::class, 'import']);
     Route::get('excel/download', [DefaultClientListController::class, 'excelDownload']);
     //Work Order Manage
