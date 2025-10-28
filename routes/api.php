@@ -486,7 +486,7 @@ Route::group(['middleware' => ['auth.provider', 'auth.client', 'auth.admin']], f
 });
 
 // paypal
-Route::post('paypal/webhook', [PaymentController::class, 'handleWebhook'])->name('paypal.webhook');
+Route::post('paypal/webhook', [PaymentController::class, 'paypalHandleWebhook'])->name('paypal.webhook');
 Route::get('paypal/success', [PaymentController::class, 'paypal_success'])->name('paypal.success');
 Route::get('paypal/cancel', [PaymentController::class, 'paypal_cancel'])->name('paypal.cancel');
 

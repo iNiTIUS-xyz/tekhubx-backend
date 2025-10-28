@@ -193,7 +193,7 @@ class PaymentController extends Controller
         return redirect(env('FRONTEND_URL') . "/payment/failed/$payment_id");
     }
 
-    public function handleWebhook(Request $request)
+    public function paypalHandleWebhook(Request $request)
     {
 
         try {
