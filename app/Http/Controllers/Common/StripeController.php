@@ -856,17 +856,35 @@ class StripeController extends Controller
     // Stripe Webhook
     public function handleWebhook(Request $request)
     {
+        // Always log first
         Log::channel('payment_log')->info('Stripe webhook received', [
             'ip' => $request->ip(),
             'user_agent' => $request->header('User-Agent'),
-            'has_stripe_signature' => $request->hasHeader('Stripe-Signature')
         ]);
+
+        // --- CRITICAL: Get raw headers (bypasses Laravel & proxy stripping) ---
+        $allHeaders = getallheaders(); // This reads Apache/Nginx raw headers
+        $sig_header = $allHeaders['Stripe-Signature']
+            ?? $_SERVER['HTTP_STRIPE_SIGNATURE']
+            ?? $request->header('Stripe-Signature')
+            ?? null;
+
+        Log::channel('payment_log')->info('Stripe-Signature sources', [
+            'getallheaders' => $allHeaders['Stripe-Signature'] ?? 'MISSING',
+            '_SERVER' => $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? 'MISSING',
+            'laravel' => $request->header('Stripe-Signature'),
+        ]);
+
+        if (!$sig_header) {
+            Log::channel('payment_log')->error('Stripe-Signature header completely missing');
+            return response('Missing signature', 400);
+        }
         // Set Stripe API Key
         Stripe::setApiKey(config('stripe.STRIPE_SECRET'));
 
         // Retrieve the webhook payload and signature
         $payload = $request->getContent();
-        $sig_header = $request->header('Stripe-Signature');
+        // $sig_header = $request->header('Stripe-Signature');
 
         try {
             // Verify the webhook signature
