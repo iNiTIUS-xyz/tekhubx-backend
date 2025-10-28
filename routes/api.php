@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\admin\LegalController;
+use App\Http\Controllers\Admin\LegalController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Client\TalentController;
 use App\Http\Controllers\Common\CommonController;
