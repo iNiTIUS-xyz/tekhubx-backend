@@ -856,7 +856,11 @@ class StripeController extends Controller
     // Stripe Webhook
     public function handleWebhook(Request $request)
     {
-        Log::channel('payment_log')->info('Stripe webhook received');
+        Log::channel('payment_log')->info('Stripe webhook received', [
+            'ip' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+            'has_stripe_signature' => $request->hasHeader('Stripe-Signature')
+        ]);
         // Set Stripe API Key
         Stripe::setApiKey(config('stripe.STRIPE_SECRET'));
 

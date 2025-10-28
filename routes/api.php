@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\RoleController;
@@ -498,3 +499,7 @@ Route::get('stripe/cancel', [StripeController::class, 'stripe_cancel'])->name('s
 //data entry
 
 // Route::get('data-entry', [FrontendController::class, 'importTechniciansFromExcel']);
+Route::post('stripe/webhook-test', function () {
+    Log::channel('payment_log')->info('Test webhook route reached');
+    return response('ok', 200);
+});
