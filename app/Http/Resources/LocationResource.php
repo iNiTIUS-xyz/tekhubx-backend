@@ -24,7 +24,7 @@ class LocationResource extends JsonResource
             'country_id' => $this->country_id,
             'country_name' => $this->country->name,
             'state_id' => $this->state_id,
-            'state_name' => $this->stateName->name ?? null,
+            'state_name' => $this->stateName->name,
             'zip_code' => $this->zip_code,
             'location_type' => $this->location_type,
             'address_1' => $this->address_line_1,
