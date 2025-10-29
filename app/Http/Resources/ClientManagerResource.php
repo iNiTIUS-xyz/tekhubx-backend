@@ -28,7 +28,8 @@ class ClientManagerResource extends JsonResource
             'zip_code' => $this->zip_code,
             'status' => $this->status,
             'role' => $this->role,
-            'address' => $this->address,
+            'address_one' => $this->address_one,
+            'address_two' => $this->address_two,
         ];
     }
 }

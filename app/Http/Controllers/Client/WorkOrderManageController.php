@@ -58,7 +58,8 @@ class WorkOrderManageController extends Controller
             'country_id' => 'required|exists:countries,id',
             'state' => 'nullable|string|max:255',
             'zip_code' => 'nullable|string|max:10',
-            'address' => 'required|string|max:255',
+            'address_one' => 'required|string|max:255',
+            'address_two' => 'nullable|string|max:255',
             // 'role_id' => 'required|exists:roles,id',
         ];
 
@@ -81,7 +82,8 @@ class WorkOrderManageController extends Controller
                 'user_name' => $request->user_name,
                 'email' => $request->email,
                 'status' => 'active',
-                'address' => $request->address,
+                'address_one' => $request->address_one,
+                'address_two' => $request->address_two ?? null,
                 'country_id' => $request->country_id,
                 'state' => $request->state,
                 'zip_code' => $request->zip_code,
@@ -155,7 +157,8 @@ class WorkOrderManageController extends Controller
             'country_id' => 'nullable|exists:countries,id',
             'state' => 'nullable|string|max:255',
             'zip_code' => 'nullable|string|max:10',
-            'address' => 'nullable|string|max:255',
+            'address_one' => 'nullable|string|max:255',
+            'address_two' => 'nullable|string|max:255',
             // 'role_id' => 'nullable|exists:roles,id'
         ];
 
@@ -181,7 +184,8 @@ class WorkOrderManageController extends Controller
                 'country_id' => $request->country_id ?? $clientManager->country_id,
                 'state' => $request->state ?? $clientManager->state,
                 'zip_code' => $request->zip_code ?? $clientManager->zip_code,
-                'address' => $request->address ?? $clientManager->address,
+                'address_one' => $request->address_one ?? $clientManager->address_one,
+                'address_two' => $request->address_two ?? $clientManager->address_two,
                 // 'role' => $role->name ?? $clientManager->role
                 'role' => $clientManager->role
             ]);
