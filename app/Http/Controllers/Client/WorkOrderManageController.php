@@ -63,7 +63,11 @@ class WorkOrderManageController extends Controller
             // 'role_id' => 'required|exists:roles,id',
         ];
 
-        $validator = Validator::make($request->all(), $rules);
+        $messages = [
+            'email.email' => 'Email must be a valid email address.',
+            'email.unique' => 'This email is already taken.',
+        ];
+        $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
             $formattedErrors = ApiResponseHelper::formatErrors(ApiResponseHelper::VALIDATION_ERROR, $validator->errors()->toArray());
