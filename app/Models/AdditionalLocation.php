@@ -45,7 +45,16 @@ class AdditionalLocation extends Model
         return $this->belongsTo(State::class, 'state');
     }
 
+     public function stateName()
+    {
+        return $this->belongsTo(State::class, 'state');
+    }
+
     public function default_client()
+    {
+        return $this->belongsTo(DefaultClientList::class, 'default_client_id');
+    }
+    public function defaultClient()
     {
         return $this->belongsTo(DefaultClientList::class, 'default_client_id');
     }

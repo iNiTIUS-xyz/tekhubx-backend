@@ -91,6 +91,11 @@ class EmployeeProviderController extends Controller
             // 'role_id' => 'required|exists:roles,id',
         ];
 
+        $messages = [
+            'email.email' => 'Email must be a valid email address.',
+            'email.unique' => 'This email is already taken.',
+        ];
+
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
