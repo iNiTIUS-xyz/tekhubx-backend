@@ -134,7 +134,7 @@ class WorkOrderController extends Controller
             'through_time' => 'nullable|required_if:schedule_type, Complete work anytime over a date range',
             'work_order_manager_id' => 'nullable|integer',
             'additional_contact_info' => 'nullable|array',
-            'new_documents_file' => 'nullable',
+            'new_documents_file' => 'nullable|array',
             'new_documents_file.*.documents_file' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:5120',
             'old_documents_id' => 'nullable',
             'tasks' => 'required|array',
@@ -690,54 +690,88 @@ class WorkOrderController extends Controller
     // }
     private function storeDocuments($request)
     {
-        $allFilePaths = [];
-        $uploadedFilePaths = [];
-        $selectedFilePaths = [];
+        $allFilePaths       = [];
+        $uploadedFilePaths  = [];
+        $selectedFilePaths  = [];
 
         try {
-            Log::info("Request Input: " . json_encode($request->all()));
-            Log::info("Files in Request: " . json_encode($request->file()));
+            Log::info('=== DOCUMENT PROCESSING START ===');
+            Log::info('Request input (non-file):', $request->except(['new_documents_file']));
+            Log::info('All files received:', $request->file());
 
-            // ✅ Handle new file uploads
-            if ($request->hasFile('new_documents_file')) {
-                foreach ($request->file('new_documents_file') as $index => $fileArray) {
-                    // Some browsers send flat structure; handle both
-                    $file = is_array($fileArray)
-                        ? ($fileArray['documents_file'] ?? null)
-                        : $fileArray;
+            // =================================================================
+            // 1. HANDLE NEW FILE UPLOADS: new_documents_file[0][documents_file]
+            // =================================================================
+            $newFileGroups = $request->file('new_documents_file');
 
-                    if ($file && $file->isValid()) {
+            if (is_array($newFileGroups) && !empty($newFileGroups)) {
+                foreach ($newFileGroups as $index => $fileGroup) {
+                    $file = null;
+
+                    // Support both formats:
+                    //   - new_documents_file[0][documents_file]
+                    //   - (future) new_documents_file[] = UploadedFile
+                    if (is_array($fileGroup) && isset($fileGroup['documents_file'])) {
+                        $file = $fileGroup['documents_file'];
+                    } elseif ($fileGroup instanceof \Illuminate\Http\UploadedFile) {
+                        $file = $fileGroup;
+                    }
+
+                    if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
                         $originalName = $file->getClientOriginalName();
                         $path = $file->store('work/documents', 'public');
 
-                        DocumentLibrary::create([
+                        // Save to DocumentLibrary
+                        $doc = DocumentLibrary::create([
                             'uuid'      => Auth::user()->uuid,
                             'name'      => $originalName,
                             'file_path' => $path,
                         ]);
 
-                        Log::info("Uploaded file: {$originalName} => {$path}");
                         $uploadedFilePaths[] = $path;
+                        Log::info("Uploaded new file [{$index}]: {$originalName} → {$path} (DB ID: {$doc->id})");
                     } else {
-                        Log::warning("Invalid or empty file at index {$index}");
+                        Log::warning("Invalid file at index {$index}");
                     }
                 }
             } else {
-                Log::info("No files detected in new_documents_file");
+                Log::info('No new files uploaded (new_documents_file is empty or missing)');
             }
 
-            // ✅ Handle old document reuse
+            // =================================================================
+            // 2. HANDLE REUSED OLD DOCUMENTS: old_documents_id[]
+            // =================================================================
             if ($request->has('old_documents_id')) {
-                $oldIds = (array) $request->input('old_documents_id');
-                $selectedFilePaths = DocumentLibrary::whereIn('id', $oldIds)->pluck('file_path')->toArray();
-                Log::info("Old file paths: " . json_encode($selectedFilePaths));
+                $oldIds = array_filter((array) $request->input('old_documents_id')); // Remove empty
+
+                if (!empty($oldIds)) {
+                    $oldDocs = DocumentLibrary::whereIn('id', $oldIds)
+                        ->select('id', 'name', 'file_path')
+                        ->get();
+
+                    foreach ($oldDocs as $doc) {
+                        $selectedFilePaths[] = $doc->file_path;
+                        Log::info("Reusing old file: {$doc->name} (ID: {$doc->id}) → {$doc->file_path}");
+                    }
+                } else {
+                    Log::info('old_documents_id is present but empty');
+                }
+            } else {
+                Log::info('No old_documents_id provided');
             }
 
-            // ✅ Merge
+            // =================================================================
+            // 3. MERGE BOTH LISTS
+            // =================================================================
             $allFilePaths = array_merge($uploadedFilePaths, $selectedFilePaths);
-            Log::info("All File Paths: " . json_encode($allFilePaths));
+
+            Log::info('Final merged document paths:', $allFilePaths);
+            Log::info('=== DOCUMENT PROCESSING END ===');
         } catch (\Throwable $e) {
-            Log::error("Document Upload Error: " . $e->getMessage());
+            Log::error('Document processing failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            // Don't throw — just return what we have
         }
 
         return $allFilePaths;
