@@ -255,7 +255,7 @@ class NotificationSentClass
         foreach ($providers as $provider) {
 
             $notificationText = $workOrder?->user?->username . ' Create a new work order for your. Check what is new challenge for your. The Work order is ' . $workOrder->work_order_title . '( ' . $workOrder->work_order_unique_id . ' )';
-
+            
             $notification = new Notification();
             $notification->sender_id = Auth::user()->id;
             $notification->receiver_id = $provider->id;

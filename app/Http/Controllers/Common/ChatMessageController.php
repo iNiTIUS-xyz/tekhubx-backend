@@ -223,80 +223,13 @@ class ChatMessageController extends Controller
         }
     }
 
-
-    // public function getNotification()
-    // {
-    //     try {
-    //         $user = Auth::user();
-    //         $userId = $user->id;
-    //         $role = $user->organization_role;
-
-    //         $notifications = Notification::query()
-    //             ->where(function ($query) use ($userId) {
-    //                 $query->where('receiver_id', $userId)
-    //                     ->orWhere('sender_id', $userId);
-    //             })
-    //             ->where('is_read', false)
-    //             ->with([
-    //                 'sender' => fn($q) => $q->select(['id', 'username', 'email']),
-    //                 'sender.profile' => fn($q) => $q->select(['id', 'user_id', 'first_name', 'last_name', 'profile_image']),
-    //                 'receiver' => fn($q) => $q->select(['id', 'username', 'email']),
-    //                 'receiver.profile' => fn($q) => $q->select(['id', 'user_id', 'first_name', 'last_name', 'profile_image']),
-    //                 'workOrder' => fn($q) => $q->select(['id', 'uuid', 'user_id', 'work_order_unique_id', 'work_order_title']),
-    //             ])
-    //             ->orderBy('created_at', 'desc')
-    //             ->get()
-    //             ->filter(function ($notification) use ($userId, $role) {
-    //                 // Notifications that are shown ONLY to receiver
-    //                 $onlyReceiverTypes = [
-    //                     'Counter Offer',
-    //                     'Work Order Request',
-    //                     'Work Order Expense Request',
-    //                     'Work Order Pay Change',
-    //                     'Work Order Make Completed By Provider',
-    //                 ];
-
-    //                 // Notifications that are shown ONLY to sender (client)
-    //                 $onlySenderTypes = [
-    //                     'Counter Offer Assign',
-    //                     'Work Request Assign',
-    //                     'Work Order Expense Request Approved',
-    //                     'Work Order Pay Change Approved',
-    //                     'Work Order Create Notification',
-    //                 ];
-
-    //                 if (in_array($notification->type, $onlyReceiverTypes)) {
-    //                     return $notification->receiver_id === $userId;
-    //                 }
-
-    //                 if (in_array($notification->type, $onlySenderTypes)) {
-    //                     return $notification->receiver_id === $userId;
-    //                 }
-
-    //                 // Fallback: show if user is either sender or receiver
-    //                 return $notification->receiver_id === $userId || $notification->sender_id === $userId;
-    //             });
-
-    //         return response()->json([
-    //             'status' => 'success',
-    //             'notifications' => NotificationResource::collection($notifications),
-    //         ]);
-    //     } catch (\Throwable $e) {
-    //         Log::error('Notifications not query not found: ' . $e->getMessage());
-    //         $systemError = ApiResponseHelper::formatErrors(ApiResponseHelper::SYSTEM_ERROR, [ServerErrorMask::UNKNOWN_ERROR]);
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => $systemError,
-    //         ], 500);
-    //     }
-    // }
     public function getNotification()
     {
         try {
             $user = Auth::user();
             $userId = $user->id;
 
-            // Define notification types based on direction
+            // Define notification types
             $providerToClientTypes = [
                 'Counter Offer',
                 'Work Order Request',
@@ -314,9 +247,7 @@ class ChatMessageController extends Controller
                 'Work Order Pay Change Approved',
             ];
 
-            // Start building base query
             $notifications = Notification::query()
-                // ->where('receiver_id', $userId)
                 ->where('is_read', false)
                 ->with([
                     'sender' => fn($q) => $q->select(['id', 'username', 'email']),
@@ -326,11 +257,23 @@ class ChatMessageController extends Controller
                     'workOrder' => fn($q) => $q->select(['id', 'uuid', 'user_id', 'work_order_unique_id', 'work_order_title']),
                 ]);
 
-            // Filter notifications based on role
+            // Apply role-based filtering with proper grouping
             if ($user->organization_role === 'Client') {
-                $notifications->whereIn('type', $providerToClientTypes);
-            } elseif ($user->organization_role === 'Provider' || $user->organization_role === 'Provider Company') {
-                $notifications->whereIn('type', $clientToProviderTypes);
+                $notifications->where(function ($q) use ($userId, $providerToClientTypes) {
+                    $q->where('receiver_id', $userId)
+                        ->whereIn('type', $providerToClientTypes);
+                })->orWhere(function ($q) use ($userId, $providerToClientTypes) {
+                    $q->where('sender_id', $userId)
+                        ->whereIn('type', $providerToClientTypes);
+                });
+            } elseif (in_array($user->organization_role, ['Provider', 'Provider Company'])) {
+                $notifications->where(function ($q) use ($userId, $clientToProviderTypes) {
+                    $q->where('receiver_id', $userId)
+                        ->whereIn('type', $clientToProviderTypes);
+                })->orWhere(function ($q) use ($userId, $clientToProviderTypes) {
+                    $q->where('sender_id', $userId)
+                        ->whereIn('type', $clientToProviderTypes);
+                });
             }
 
             $notifications = $notifications->orderBy('created_at', 'desc')->get();
@@ -340,7 +283,10 @@ class ChatMessageController extends Controller
                 'notifications' => NotificationResource::collection($notifications),
             ]);
         } catch (\Throwable $e) {
-            Log::error('Notifications query failed: ' . $e->getMessage());
+            Log::error('Notifications query failed: ' . $e->getMessage(), [
+                'user_id' => Auth::id() ?? null,
+                'trace' => $e->getTraceAsString()
+            ]);
 
             $systemError = ApiResponseHelper::formatErrors(ApiResponseHelper::SYSTEM_ERROR, [ServerErrorMask::UNKNOWN_ERROR]);
 
