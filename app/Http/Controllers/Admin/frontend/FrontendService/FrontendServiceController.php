@@ -20,12 +20,6 @@ class FrontendServiceController extends Controller
     public function __construct(FileUploadClass $fileUpload)
     {
         $this->fileUpload = $fileUpload;
-
-        // $this->middleware('permission:frontend_service,frontend_service.list')->only(['index']);
-        $this->middleware('permission:frontend_service.create_store')->only(['store']);
-        $this->middleware('permission:frontend_service.edit')->only(['edit']);
-        $this->middleware('permission:frontend_service.update')->only(['update']);
-        $this->middleware('permission:frontend_service.delete')->only(['destroy']);
     }
 
     public function index()
@@ -78,7 +72,7 @@ class FrontendServiceController extends Controller
             $frontendService->slug = strtolower(str_replace(' ', '-', $request->title)) . '-' . date('YmdHis');
             $frontendService->short_description = $request->short_description;
             if ($request->hasFile("banner_image")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('banner_image'), 'frontend_service', 800, 600);
+                $image_url = $this->fileUpload->imageUploader($request->file('banner_image'), 'frontend_service');
                 $frontendService->banner_image = $image_url;
             }
             $frontendService->description = $request->description;
@@ -171,7 +165,7 @@ class FrontendServiceController extends Controller
             // Handle banner image if provided
             if ($request->hasFile('banner_image')) {
                 $this->fileUpload->fileUnlink($frontendService->banner_image); // Remove old image
-                $image_url = $this->fileUpload->imageUploader($request->file('banner_image'), 'frontend_service', 800, 600);
+                $image_url = $this->fileUpload->imageUploader($request->file('banner_image'), 'frontend_service');
                 $frontendService->banner_image = $image_url;
             }
 

@@ -12,16 +12,6 @@ use App\Helpers\ApiResponseHelper;
 
 class LegalController extends Controller
 {
-
-    public function __construct()
-    {
-        // $this->middleware('permission:legal,legal.list')->only(['index']);
-        $this->middleware('permission:legal.create_store')->only(['store']);
-        $this->middleware('permission:legal.edit')->only(['edit']);
-        $this->middleware('permission:legal.update')->only(['update']);
-        $this->middleware('permission:legal.delete')->only(['destroy']);
-    }
-
     public function index()
     {
         try {

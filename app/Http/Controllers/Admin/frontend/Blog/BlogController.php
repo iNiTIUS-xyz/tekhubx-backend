@@ -71,7 +71,7 @@ class BlogController extends Controller
             $blogs->tags = json_encode($request->tags);
 
             if ($request->hasFile("image")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'blog', 800, 600);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'blog');
                 $blogs->image = $image_url;
             }
 
@@ -149,7 +149,7 @@ class BlogController extends Controller
 
             if ($request->hasFile("image")) {
                 $this->fileUpload->fileUnlink($blogs->image);
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'blog', 800, 600);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'blog');
                 $blogs->image = $image_url;
             }
 

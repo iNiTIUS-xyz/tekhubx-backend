@@ -20,12 +20,6 @@ class FrontendServiceCategoryController extends Controller
     public function __construct(FileUploadClass $fileUpload)
     {
         $this->fileUpload = $fileUpload;
-
-        // $this->middleware('permission:service_category,service_category.list')->only(['index']);
-        $this->middleware('permission:service_category.create_store')->only(['store']);
-        $this->middleware('permission:service_category.edit')->only(['edit']);
-        $this->middleware('permission:service_category.update')->only(['update']);
-        $this->middleware('permission:service_category.delete')->only(['destroy']);
     }
 
     public function index()
@@ -76,7 +70,7 @@ class FrontendServiceCategoryController extends Controller
             $serviceCategory->description = $request->description;
             $serviceCategory->slug = strtolower(str_replace(' ', '-', $request->name));
             if ($request->hasFile("image")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'service_category', 100, 100);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'service_category');
                 $serviceCategory->image = $image_url;
             }
             $serviceCategory->status = $request->status;
@@ -166,7 +160,7 @@ class FrontendServiceCategoryController extends Controller
             // Handle image update if provided
             if ($request->hasFile('image')) {
                 $this->fileUpload->fileUnlink($serviceCategory->image); // Remove old image
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'service_category', 100, 100);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'service_category');
                 $serviceCategory->image = $image_url;
             }
 

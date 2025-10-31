@@ -42,12 +42,6 @@ class EmployeeProviderController extends Controller
     {
         $this->employeeProviderService = $employeeProviderService;
         $this->fileUpload = $fileUpload;
-
-        // $this->middleware('permission:employee_providers,employee_providers.list')->only(['index']);
-        $this->middleware('permission:employee_providers.create_store')->only(['store']);
-        $this->middleware('permission:employee_providers.edit')->only(['edit']);
-        $this->middleware('permission:employee_providers.update')->only(['update']);
-        $this->middleware('permission:employee_providers.delete')->only(['destroy']);
     }
 
     public function index()
@@ -555,7 +549,7 @@ class EmployeeProviderController extends Controller
 
                 $extension = $licenseData['file']->getClientOriginalExtension();
                 if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
-                    $licenseCertificate->file = $this->fileUpload->imageUploader($licenseData['file'], 'license_and_certificate', 200, 200);
+                    $licenseCertificate->file = $this->fileUpload->imageUploader($licenseData['file'], 'license_and_certificate');
                 } elseif ($extension === 'pdf') {
                     $licenseCertificate->file = $this->fileUpload->pdfUploader($licenseData['file'], 'license_and_certificate');
                 } else {
@@ -723,7 +717,7 @@ class EmployeeProviderController extends Controller
             $profile = Profile::find($request->profile_id);
             if ($request->hasFile("profile_image")) {
                 $this->fileUpload->fileUnlink($profile->profile_image);
-                $image_url = $this->fileUpload->imageUploader($request->file('profile_image'), 'profile', 200, 200);
+                $image_url = $this->fileUpload->imageUploader($request->file('profile_image'), 'profile');
                 $profile->profile_image = $image_url;
             }
             $profile->save();

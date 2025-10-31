@@ -20,12 +20,6 @@ class WorkingStepController extends Controller
     public function __construct(FileUploadClass $fileUpload)
     {
         $this->fileUpload = $fileUpload;
-
-        // $this->middleware('permission:how_it_works_steps,how_it_works_steps.list')->only(['index']);
-        $this->middleware('permission:how_it_works_steps.create_store')->only(['store']);
-        $this->middleware('permission:how_it_works_steps.edit')->only(['edit']);
-        $this->middleware('permission:how_it_works_steps.update')->only(['update']);
-        $this->middleware('permission:how_it_works_steps.delete')->only(['destroy']);
     }
     public function index()
     {
@@ -94,7 +88,7 @@ class WorkingStepController extends Controller
             $step->step_description = $request->step_description;
 
             if ($request->hasFile('step_image')) {
-                $imageUrl = $this->fileUpload->imageUploader($request->file('step_image'), 'how_it_works_steps', 200, 200);
+                $imageUrl = $this->fileUpload->imageUploader($request->file('step_image'), 'how_it_works_steps');
                 $step->step_image = $imageUrl;
             }
 
@@ -192,7 +186,7 @@ class WorkingStepController extends Controller
                 }
 
                 // Upload new image
-                $imageUrl = $this->fileUpload->imageUploader($request->file('step_image'), 'how_it_works_steps', 200, 200);
+                $imageUrl = $this->fileUpload->imageUploader($request->file('step_image'), 'how_it_works_steps');
                 $step->step_image = $imageUrl;
             }
 

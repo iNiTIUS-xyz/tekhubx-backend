@@ -30,12 +30,6 @@ class SendWorkRequestsController extends Controller
     public function __construct(NotificationSentClass $sentNotification)
     {
         $this->sentNotification = $sentNotification;
-
-        // $this->middleware('permission:send_work_requests,send_work_requests.list')->only(['index']);
-        $this->middleware('permission:send_work_requests.create_store')->only(['store']);
-        $this->middleware('permission:send_work_requests.Edit')->only(['edit']);
-        $this->middleware('permission:send_work_requests.update')->only(['update']);
-        $this->middleware('permission:send_work_requests.delete')->only(['destroy']);
     }
 
     public function index()

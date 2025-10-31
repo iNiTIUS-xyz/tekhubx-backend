@@ -20,11 +20,6 @@ class PageController extends Controller
     public function __construct(FileUploadClass $fileUpload)
     {
         $this->fileUpload = $fileUpload;
-
-        // $this->middleware('permission:pages,pages.list')->only(['index']);
-        $this->middleware('permission:pages.create_store')->only(['store']);
-        $this->middleware('permission:pages.edit')->only(['edit']);
-        $this->middleware('permission:pages.update')->only(['update']);
     }
     public function index()
     {
@@ -85,7 +80,7 @@ class PageController extends Controller
             $pages->short_description = $request->short_description;
 
             if ($request->hasFile("banner_image")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('banner_image'), 'page', 200, 200);
+                $image_url = $this->fileUpload->imageUploader($request->file('banner_image'), 'page');
                 $pages->banner_image = $image_url;
             }
 
@@ -175,7 +170,7 @@ class PageController extends Controller
             $pages->short_description = $request->short_description;
             if ($request->hasFile("banner_image")) {
                 $this->fileUpload->fileUnlink($pages->banner_image);
-                $image_url = $this->fileUpload->imageUploader($request->file('banner_image'), 'page', 200, 200);
+                $image_url = $this->fileUpload->imageUploader($request->file('banner_image'), 'page');
                 $pages->banner_image = $image_url;
             }
             $pages->description = $request->description;

@@ -127,7 +127,7 @@ class PageHeaderController extends Controller
                 if ($pageHeader->{"{$pageKey}_image"}) {
                     $this->fileUpload->fileUnlink($pageHeader->{"{$pageKey}_image"});
                 }
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'page_headers', 200, 200);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'page_headers');
                 $pageHeader->{"{$pageKey}_image"} = $image_url;
             }
             if ($request->has('meta_keywords')) {
@@ -323,9 +323,9 @@ class PageHeaderController extends Controller
             if ($request->hasFile('image')) {
                 // Delete old image if it exists
                 if ($pageHeader->{"{$pageKey}_image"}) {
-                    $this->fileUpload->deleteFile($pageHeader->{"{$pageKey}_image"});
+                    $this->fileUpload->fileUnlink($pageHeader->{"{$pageKey}_image"});
                 }
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'page_headers', 200, 200);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'page_headers');
                 $pageHeader->{"{$pageKey}_image"} = $image_url;
             }
             if ($request->has('meta_keywords')) {

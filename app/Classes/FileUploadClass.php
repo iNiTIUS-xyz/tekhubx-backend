@@ -8,8 +8,13 @@ use Illuminate\Support\Facades\Storage;
 class FileUploadClass
 {
     // function for handle image uploads
-    public function imageUploader($file, $path, $width = null, $height = null, $old_image = null)
+    public function imageUploader($file, $path, $old_image = null)
     {
+
+        if (!$file) {
+            throw new \Exception('No file provided.');
+        }
+
         if ($old_image) {
             $this->fileUnlink($old_image);
         }
@@ -17,15 +22,17 @@ class FileUploadClass
         // Check if the file is an image
         if (in_array($file->getClientOriginalExtension(), ['jpg', 'jpeg', 'png', 'webp'])) {
 
-            $img = Image::make($file);
+            // Validate file extension
+            $extension = strtolower($file->getClientOriginalExtension());
+            if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
+                throw new \Exception('File type not supported for image upload.');
+            }
 
-            $img->orientate();
+            // Make image instance
+            $img = Image::make($file)->orientate();
 
-            $img->resize($width, $height, function ($constraint) {
-                $constraint->aspectRatio();
-            });
-
-            $file_name = $path . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file_name = $path . '-' . uniqid() . '.' . $extension;
+            // $file_name = $path . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
 
             $upload_path = 'public/' . $path . '/' . date('Y-m-d') . '/'; // Store in 'public' disk
 

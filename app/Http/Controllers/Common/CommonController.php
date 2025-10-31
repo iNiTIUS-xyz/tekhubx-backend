@@ -195,7 +195,7 @@ class CommonController extends Controller
             $company->technicians_hire = $request->technicians_hire;
 
             if ($request->hasFile("logo")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('logo'), 'company', 800, 600);
+                $image_url = $this->fileUpload->imageUploader($request->file('logo'), 'company');
                 $company->logo = $image_url;
             }
 
@@ -315,7 +315,7 @@ class CommonController extends Controller
 
                 if ($request->hasFile("profile_image")) {
                     $this->fileUpload->fileUnlink($profile->profile_image);
-                    $image_url = $this->fileUpload->imageUploader($request->file('profile_image'), 'profile', 200, 200);
+                    $image_url = $this->fileUpload->imageUploader($request->file('profile_image'), 'profile');
                     $profile->profile_image = $image_url;
                 }
                 $profile->save();
@@ -745,9 +745,7 @@ class CommonController extends Controller
                                 if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
                                     $licenseCertificate->file = $this->fileUpload->imageUploader(
                                         $data['file'],
-                                        'license_and_certificate',
-                                        200,
-                                        200
+                                        'license_and_certificate'
                                     );
                                 } elseif ($extension === 'pdf') {
                                     $licenseCertificate->file = $this->fileUpload->pdfUploader(

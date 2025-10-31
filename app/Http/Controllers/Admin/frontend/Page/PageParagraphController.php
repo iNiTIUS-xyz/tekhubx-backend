@@ -20,12 +20,6 @@ class PageParagraphController extends Controller
     public function __construct(FileUploadClass $fileUpload)
     {
         $this->fileUpload = $fileUpload;
-
-        // $this->middleware('permission:page_paragraphs,page_paragraphs.list')->only(['index']);
-        $this->middleware('permission:page_paragraphs.create_store')->only(['store']);
-        $this->middleware('permission:page_paragraphs.edit')->only(['edit']);
-        $this->middleware('permission:page_paragraphs.update')->only(['update']);
-        $this->middleware('permission:page_paragraphs.delete')->only(['destroy']);
     }
     public function index()
     {
@@ -80,7 +74,7 @@ class PageParagraphController extends Controller
             $pageParagraph->paragraph_one_title = $request->paragraph_one_title;
             $pageParagraph->paragraph_one_description = $request->paragraph_one_description;
             if ($request->hasFile('paragraph_one_image')) {
-                $imageUrl = $this->fileUpload->imageUploader($request->file('paragraph_one_image'), 'page_paragraphs', 200, 200);
+                $imageUrl = $this->fileUpload->imageUploader($request->file('paragraph_one_image'), 'page_paragraphs');
                 $pageParagraph->paragraph_one_image = $imageUrl;
             }
 
@@ -88,7 +82,7 @@ class PageParagraphController extends Controller
             $pageParagraph->paragraph_two_title = $request->paragraph_two_title;
             $pageParagraph->paragraph_two_description = $request->paragraph_two_description;
             if ($request->hasFile('paragraph_two_image')) {
-                $imageUrl = $this->fileUpload->imageUploader($request->file('paragraph_two_image'), 'page_paragraphs', 200, 200);
+                $imageUrl = $this->fileUpload->imageUploader($request->file('paragraph_two_image'), 'page_paragraphs');
                 $pageParagraph->paragraph_two_image = $imageUrl;
             }
 
@@ -96,7 +90,7 @@ class PageParagraphController extends Controller
             $pageParagraph->paragraph_three_title = $request->paragraph_three_title;
             $pageParagraph->paragraph_three_description = $request->paragraph_three_description;
             if ($request->hasFile('paragraph_three_image')) {
-                $imageUrl = $this->fileUpload->imageUploader($request->file('paragraph_three_image'), 'page_paragraphs', 200, 200);
+                $imageUrl = $this->fileUpload->imageUploader($request->file('paragraph_three_image'), 'page_paragraphs');
                 $pageParagraph->paragraph_three_image = $imageUrl;
             }
 
@@ -184,7 +178,7 @@ class PageParagraphController extends Controller
                     $this->fileUpload->fileUnlink($pageParagraph->paragraph_one_image);
                 }
                 // Upload new image
-                $imageUrl = $this->fileUpload->imageUploader($request->file('paragraph_one_image'), 'page_paragraphs', 200, 200);
+                $imageUrl = $this->fileUpload->imageUploader($request->file('paragraph_one_image'), 'page_paragraphs');
                 $pageParagraph->paragraph_one_image = $imageUrl;
             }
 
@@ -201,7 +195,7 @@ class PageParagraphController extends Controller
                     $this->fileUpload->fileUnlink($pageParagraph->paragraph_two_image);
                 }
                 // Upload new image
-                $imageUrl = $this->fileUpload->imageUploader($request->file('paragraph_two_image'), 'page_paragraphs', 200, 200);
+                $imageUrl = $this->fileUpload->imageUploader($request->file('paragraph_two_image'), 'page_paragraphs');
                 $pageParagraph->paragraph_two_image = $imageUrl;
             }
 
@@ -218,7 +212,7 @@ class PageParagraphController extends Controller
                     $this->fileUpload->fileUnlink($pageParagraph->paragraph_three_image);
                 }
                 // Upload new image
-                $imageUrl = $this->fileUpload->imageUploader($request->file('paragraph_three_image'), 'page_paragraphs', 200, 200);
+                $imageUrl = $this->fileUpload->imageUploader($request->file('paragraph_three_image'), 'page_paragraphs');
                 $pageParagraph->paragraph_three_image = $imageUrl;
             }
 

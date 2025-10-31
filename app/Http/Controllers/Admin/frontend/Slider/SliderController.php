@@ -20,12 +20,6 @@ class SliderController extends Controller
     public function __construct(FileUploadClass $fileUpload)
     {
         $this->fileUpload = $fileUpload;
-
-        // $this->middleware('permission:slider,slider.list')->only(['index']);
-        $this->middleware('permission:slider.create_store')->only(['store']);
-        $this->middleware('permission:slider.edit')->only(['edit']);
-        $this->middleware('permission:slider.update')->only(['update']);
-        $this->middleware('permission:slider.delete')->only(['destroy']);
     }
 
     public function index()
@@ -70,7 +64,7 @@ class SliderController extends Controller
             $sliders = new Slider();
             $sliders->title = $request->title;
             if ($request->hasFile("image")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'slider', 800, 600);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'slider');
                 $sliders->image = $image_url;
             }
 
@@ -143,7 +137,7 @@ class SliderController extends Controller
             $sliders->title = $request->title;
             if ($request->hasFile("image")) {
                 $this->fileUpload->fileUnlink($sliders->image);
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'slider', 800, 600);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'slider');
                 $sliders->image = $image_url;
             }
 

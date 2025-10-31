@@ -20,12 +20,6 @@ class DocumentationController extends Controller
     public function __construct(FileUploadClass $fileUpload)
     {
         $this->fileUpload = $fileUpload;
-
-        // $this->middleware('permission:documentation,documentation.list')->only(['index']);
-        // $this->middleware('permission:documentation.create_store')->only(['store']);
-        // $this->middleware('permission:documentation.edit')->only(['edit']);
-        // $this->middleware('permission:documentation.update')->only(['update']);
-        // $this->middleware('permission:documentation.delete')->only(['destroy']);
     }
 
     public function index()
@@ -91,7 +85,7 @@ class DocumentationController extends Controller
             $documentations->description = $request->description;
 
             if ($request->hasFile("image")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'documentation', 400, 400);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'documentation');
                 $documentations->image = $image_url;
             }
 
@@ -187,7 +181,7 @@ class DocumentationController extends Controller
 
             if ($request->hasFile("image")) {
                 $this->fileUpload->fileUnlink($documentations->image);
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'documentation', 400, 400);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'documentation');
                 $documentations->image = $image_url;
             }
 

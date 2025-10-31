@@ -851,7 +851,6 @@ class WorkOrderController extends Controller
         ]);
     }
 
-
     public function edit($id)
     {
         try {
@@ -1164,7 +1163,6 @@ class WorkOrderController extends Controller
         }
     }
 
-
     private function updateAdditionalContacts($request, $workOrderUniqueId)
     {
         $additionalContactIds = [];
@@ -1196,7 +1194,6 @@ class WorkOrderController extends Controller
 
         return $additionalContactIds;
     }
-
 
     private function updateShipments($request, $workOrderUniqueId)
     {

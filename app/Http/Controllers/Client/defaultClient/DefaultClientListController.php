@@ -104,7 +104,7 @@ class DefaultClientListController extends Controller
 
 
             if ($request->hasFile("logo")) {
-                $logo_url = $this->fileUpload->imageUploader($request->file('logo'), 'defaultClient', 200, 200);
+                $logo_url = $this->fileUpload->imageUploader($request->file('logo'), 'defaultClient');
                 $defaultClients->logo = $logo_url;
             }
             $defaultClients->status = "Active";
@@ -220,7 +220,7 @@ class DefaultClientListController extends Controller
 
             if ($request->hasFile("logo")) {
                 $this->fileUpload->fileUnlink($defaultClients->logo);
-                $logo_url = $this->fileUpload->imageUploader($request->file('logo'), 'defaultClient', 200, 200);
+                $logo_url = $this->fileUpload->imageUploader($request->file('logo'), 'defaultClient');
                 $defaultClients->logo = $logo_url;
             }
 

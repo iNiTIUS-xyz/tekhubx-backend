@@ -20,13 +20,6 @@ class LicenseAndCertificateController extends Controller
     public function __construct(FileUploadClass $fileUpload)
     {
         $this->fileUpload = $fileUpload;
-
-        $this->middleware('permission:employee_provider_license_certificates,employee_provider_license_certificates.list')->only(['index']);
-        $this->middleware('permission:employee_provider_license_certificates.create_store')->only(['store']);
-        $this->middleware('permission:employee_provider_license_certificates.edit')->only(['edit']);
-        $this->middleware('permission:employee_provider_license_certificates.update')->only(['update']);
-        $this->middleware('permission:employee_provider_license_certificates.delete')->only(['destroy']);
-
     }
     public function index(Request $request)
     {

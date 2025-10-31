@@ -23,12 +23,6 @@ class StaffController extends Controller
     public function __construct(FileUploadClass $fileUpload)
     {
         $this->fileUpload = $fileUpload;
-
-        $this->middleware('permission:admin_staff,admin_staff.list')->only(['index']);
-        $this->middleware('permission:admin_staff.create_store')->only(['store']);
-        $this->middleware('permission:admin_staff.edit')->only(['edit']);
-        $this->middleware('permission:admin_staff.update')->only(['update']);
-        $this->middleware('permission:admin_staff.delete')->only(['destroy']);
     }
 
     public function index()
@@ -108,7 +102,7 @@ class StaffController extends Controller
             $profile->phone = $request->phone;
 
             if ($request->hasFile("profile_image")) {
-                $profile_image_url = $this->fileUpload->imageUploader($request->file('profile_image'), 'admin_staff', 400, 400);
+                $profile_image_url = $this->fileUpload->imageUploader($request->file('profile_image'), 'admin_staff');
                 $profile->profile_image = $profile_image_url;
             }
 
@@ -207,7 +201,7 @@ class StaffController extends Controller
 
             if ($request->hasFile("profile_image")) {
                 $this->fileUpload->fileUnlink($profile->profile_image);
-                $profile_image_url = $this->fileUpload->imageUploader($request->file('profile_image'), 'admin_staff', 400, 400);
+                $profile_image_url = $this->fileUpload->imageUploader($request->file('profile_image'), 'admin_staff');
                 $profile->profile_image = $profile_image_url;
             }
 

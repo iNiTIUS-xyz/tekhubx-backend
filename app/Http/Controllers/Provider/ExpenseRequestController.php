@@ -26,12 +26,6 @@ class ExpenseRequestController extends Controller
     {
         $this->fileUpload = $fileUpload;
         $this->sentNotification = $sentNotification;
-
-        // $this->middleware('permission:expense_request,expense_request.list')->only(['index']);
-        $this->middleware('permission:expense_request.create_store')->only(['store']);
-        $this->middleware('permission:expense_request.edit')->only(['edit']);
-        $this->middleware('permission:expense_request.update')->only(['update']);
-        $this->middleware('permission:expense_request.delete')->only(['destroy']);
     }
 
     public function index()
@@ -112,7 +106,7 @@ class ExpenseRequestController extends Controller
             //     $expenseRequest->description = $expenseReq->description;
 
             //     if (!empty($expenseReq->file) && $expenseReq->hasFile("file")) {
-            //         $image_url = $this->fileUpload->imageUploader($request->file('file'), 'expenseRequest', 800, 600);
+            //         $image_url = $this->fileUpload->imageUploader($request->file('file'), 'expenseRequest');
             //         $expenseRequest->file = $image_url;
             //     }
 
@@ -135,7 +129,7 @@ class ExpenseRequestController extends Controller
                 // Check if the file is uploaded and handle the upload
                 if ($request->hasFile("expense_requests.$index.file")) {
                     $file = $request->file("expense_requests.$index.file");
-                    $image_url = $this->fileUpload->imageUploader($file, 'expenseRequest', 800, 600);
+                    $image_url = $this->fileUpload->imageUploader($file, 'expenseRequest');
                     $expenseRequest->file = $image_url;
                 }
 
@@ -245,7 +239,7 @@ class ExpenseRequestController extends Controller
             $expenseRequest->description = $request->description;
 
             if (!empty($request->file) && $request->hasFile("file")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('file'), 'expenseRequest', 800, 600);
+                $image_url = $this->fileUpload->imageUploader($request->file('file'), 'expenseRequest');
                 $expenseRequest->file = $image_url;
             }
 

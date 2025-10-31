@@ -14,16 +14,6 @@ use Illuminate\Support\Facades\Validator;
 
 class AdditionalContactController extends Controller
 {
-
-    public function __construct()
-    {
-        // $this->middleware('permission:additional_contact,additional_contact.list')->only(['index']);
-        $this->middleware('permission:additional_contact.create_store')->only(['store']);
-        $this->middleware('permission:additional_contact.edit')->only(['edit']);
-        $this->middleware('permission:additional_contact.update')->only(['update']);
-        $this->middleware('permission:additional_contact.delete')->only(['destroy']);
-    }
-
     public function index()
     {
         try {

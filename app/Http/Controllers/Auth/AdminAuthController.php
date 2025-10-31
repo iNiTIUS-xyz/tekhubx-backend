@@ -304,7 +304,7 @@ class AdminAuthController extends Controller
 
             if ($request->hasFile("profile_image")) {
                 $this->fileUpload->fileUnlink($profile->profile_image);
-                $image_url = $this->fileUpload->imageUploader($request->file('profile_image'), 'profile_image', 200, 200);
+                $image_url = $this->fileUpload->imageUploader($request->file('profile_image'), 'profile_image');
                 $profile->profile_image = $image_url;
             }
 

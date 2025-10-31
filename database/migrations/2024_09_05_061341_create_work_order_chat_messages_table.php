@@ -16,7 +16,7 @@ return new class extends Migration
     {
         Schema::create('work_order_chat_messages', function (Blueprint $table) {
             $table->id();
-            $table->integer('work_order_unique_id')->nullable();
+            $table->unsignedBigInteger('work_order_unique_id')->nullable();
             $table->foreignIdFor(User::class, 'sender_id')->nullable();
             $table->foreignIdFor(User::class, 'receiver_id')->nullable();
             $table->longText('message')->nullable();

@@ -20,12 +20,6 @@ class QuoteController extends Controller
     public function __construct(FileUploadClass $fileUpload)
     {
         $this->fileUpload = $fileUpload;
-
-        // $this->middleware('permission:quote,quote.list')->only(['index']);
-        $this->middleware('permission:quote.create_store')->only(['store']);
-        $this->middleware('permission:quote.edit')->only(['edit']);
-        $this->middleware('permission:quote.update')->only(['update']);
-        $this->middleware('permission:quote.delete')->only(['destroy']);
     }
 
     public function index()
@@ -70,7 +64,7 @@ class QuoteController extends Controller
             $quotes = new Quote();
             $quotes->quote = $request->quote;
             if ($request->hasFile("image")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'quote', 100, 100);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'quote');
                 $quotes->image = $image_url;
             }
             $quotes->quote_author_name = $request->quote_author_name;
@@ -140,7 +134,7 @@ class QuoteController extends Controller
             $quotes->quote = $request->quote;
             if ($request->hasFile("image")) {
                 $this->fileUpload->fileUnlink($quotes->image);
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'quote', 100, 100);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'quote');
                 $quotes->image = $image_url;
             }
             $quotes->quote_author_name = $request->quote_author_name;

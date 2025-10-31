@@ -21,12 +21,6 @@ class TestimonialController extends Controller
     public function __construct(FileUploadClass $fileUpload)
     {
         $this->fileUpload = $fileUpload;
-
-        // $this->middleware('permission:testimonial,testimonial.list')->only(['index']);
-        $this->middleware('permission:testimonial.create_store')->only(['store']);
-        $this->middleware('permission:testimonial.edit')->only(['edit']);
-        $this->middleware('permission:testimonial.update')->only(['update']);
-        $this->middleware('permission:testimonial.delete')->only(['destroy']);
     }
 
     public function index()
@@ -78,7 +72,7 @@ class TestimonialController extends Controller
 
 
             if ($request->hasFile("image")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'testimonials', 640, 623);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'testimonials');
                 $testimonials->image = $image_url;
             }
 
@@ -157,7 +151,7 @@ class TestimonialController extends Controller
 
             if ($request->hasFile("image")) {
                 $this->fileUpload->fileUnlink($testimonials->image);
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'testimonials', 640, 623);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'testimonials');
                 $testimonials->image = $image_url;
             }
 

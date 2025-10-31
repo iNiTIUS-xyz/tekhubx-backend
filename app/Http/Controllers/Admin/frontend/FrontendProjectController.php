@@ -76,7 +76,7 @@ class FrontendProjectController extends Controller
             $projects->tags = json_encode($request->tags);
 
             if ($request->hasFile("image")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'projects', 800, 600);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'projects');
                 $projects->image = $image_url;
             }
 
@@ -154,7 +154,7 @@ class FrontendProjectController extends Controller
 
             if ($request->hasFile("image")) {
                 $this->fileUpload->fileUnlink($projects->image);
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'projects', 800, 600);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'projects');
                 $projects->image = $image_url;
             }
 

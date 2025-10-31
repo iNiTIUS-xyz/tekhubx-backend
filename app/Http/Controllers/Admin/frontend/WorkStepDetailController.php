@@ -79,7 +79,7 @@ class WorkStepDetailController extends Controller
 
                 $this->fileUpload->fileUnlink($workStepDetail->step_image);
 
-                $image_url_one = $this->fileUpload->imageUploader($request->file('step_image'), 'work_step_image', 640, 640);
+                $image_url_one = $this->fileUpload->imageUploader($request->file('step_image'), 'work_step_image');
                 $workStepDetail->step_image = $image_url_one;
             }
 
@@ -158,7 +158,7 @@ class WorkStepDetailController extends Controller
 
                 $this->fileUpload->fileUnlink($workStepDetail->step_image);
 
-                $image_url_one = $this->fileUpload->imageUploader($request->file('step_image'), 'work_step_image', 640, 640);
+                $image_url_one = $this->fileUpload->imageUploader($request->file('step_image'), 'work_step_image');
                 $workStepDetail->step_image = $image_url_one;
             }
 

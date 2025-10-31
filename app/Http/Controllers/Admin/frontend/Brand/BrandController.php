@@ -69,7 +69,7 @@ class BrandController extends Controller
             $brands = new Brand();
             $brands->title = $request->title;
             if ($request->hasFile("image")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'brand', 200, 200);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'brand');
                 $brands->image = $image_url;
             }
 
@@ -140,7 +140,7 @@ class BrandController extends Controller
             $brands->title = $request->title;
             if ($request->hasFile("image")) {
                 $this->fileUpload->fileUnlink($brands->image);
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'brand', 200, 200);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'brand');
                 $brands->image = $image_url;
             }
             $brands->status = $request->status;

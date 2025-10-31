@@ -14,15 +14,6 @@ use Illuminate\Support\Facades\Validator;
 
 class ExpenseCategoryController extends Controller
 {
-    public function __construct()
-    {
-        // $this->middleware('permission:expense_category,expense_category.list')->only(['index']);
-        $this->middleware('permission:expense_category.create_store')->only(['store']);
-        $this->middleware('permission:expense_category.edit')->only(['edit']);
-        $this->middleware('permission:expense_category.update')->only(['update']);
-        $this->middleware('permission:expense_category.delete')->only(['destroy']);
-    }
-
     public function index()
     {
         try {

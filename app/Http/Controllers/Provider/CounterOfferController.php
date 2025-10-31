@@ -27,8 +27,6 @@ class CounterOfferController extends Controller
     public function __construct(NotificationSentClass $sentNotification)
     {
         $this->sentNotification = $sentNotification;
-        // $this->middleware('permission:counter_offer,counter_offer.list')->only(['index']);
-        $this->middleware('permission:counter_offer.create_store')->only(['store']);
     }
 
     public function index()

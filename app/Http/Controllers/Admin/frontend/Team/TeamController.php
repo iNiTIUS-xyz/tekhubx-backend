@@ -20,12 +20,6 @@ class TeamController extends Controller
     public function __construct(FileUploadClass $fileUpload)
     {
         $this->fileUpload = $fileUpload;
-
-        // $this->middleware('permission:team,team.list')->only(['index']);
-        $this->middleware('permission:team.create_store')->only(['store']);
-        $this->middleware('permission:team.edit')->only(['edit']);
-        $this->middleware('permission:team.update')->only(['update']);
-        $this->middleware('permission:team.delete')->only(['destroy']);
     }
 
     public function index()
@@ -77,7 +71,7 @@ class TeamController extends Controller
 
             if ($request->hasFile("image")) {
                 $this->fileUpload->fileUnlink($teams->image);
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'team', 800, 600);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'team');
                 $teams->image = $image_url;
             }
             $teams->designation = $request->designation;
@@ -157,7 +151,7 @@ class TeamController extends Controller
 
             if ($request->hasFile("image")) {
                 $this->fileUpload->fileUnlink($teams->image);
-                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'team', 800, 600);
+                $image_url = $this->fileUpload->imageUploader($request->file('image'), 'team');
                 $teams->image = $image_url;
             }
             $teams->designation = $request->designation;

@@ -15,14 +15,6 @@ use Illuminate\Support\Facades\Validator;
 
 class TalentController extends Controller
 {
-    public function __construct()
-    {
-        // $this->middleware('permission:talent,talent.list')->only(['index']);
-        $this->middleware('permission:talent.create_store')->only(['store']);
-        $this->middleware('permission:talent.edit')->only(['edit']);
-        $this->middleware('permission:talent.update')->only(['update']);
-        $this->middleware('permission:talent.delete')->only(['destroy']);
-    }
 
     public function index()
     {

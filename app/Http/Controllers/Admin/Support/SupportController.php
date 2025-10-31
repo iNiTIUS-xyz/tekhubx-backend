@@ -14,16 +14,6 @@ use Illuminate\Support\Facades\DB;
 
 class SupportController extends Controller
 {
-
-    public function __construct()
-    {
-        // $this->middleware('permission:supports,supports.list')->only(['index']);
-        $this->middleware('permission:supports.create_store')->only(['store']);
-        $this->middleware('permission:supports.edit')->only(['edit']);
-        $this->middleware('permission:supports.update')->only(['update']);
-        $this->middleware('permission:supports.delete')->only(['destroy']);
-    }
-
     public function index()
     {
         try {

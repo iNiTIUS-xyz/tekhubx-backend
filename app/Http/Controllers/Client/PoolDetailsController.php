@@ -15,14 +15,6 @@ use App\Http\Resources\PoolDetailsResource;
 
 class PoolDetailsController extends Controller
 {
-    public function __construct()
-    {
-        // $this->middleware('permission:pool_details,pool_details.list')->only(['index']);
-        $this->middleware('permission:pool_details.create_store')->only(['store']);
-        $this->middleware('permission:pool_details.edit')->only(['edit']);
-        $this->middleware('permission:pool_details.update')->only(['update']);
-        $this->middleware('permission:pool_details.delete')->only(['destroy']);
-    }
 
     public function index()
     {

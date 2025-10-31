@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use App\Classes\FileUploadClass;
 use App\Helpers\ApiResponseHelper;
 use App\Models\FAQ;
 use App\Utils\ServerErrorMask;
@@ -15,18 +14,6 @@ use Illuminate\Support\Facades\DB;
 
 class FAQController extends Controller
 {
-    protected $fileUpload;
-
-    public function __construct(FileUploadClass $fileUpload)
-    {
-        $this->fileUpload = $fileUpload;
-
-        // $this->middleware('permission:faqs,faqs.list')->only(['index']);
-        $this->middleware('permission:faqs.create_store')->only(['store']);
-        $this->middleware('permission:faqs.edit')->only(['edit']);
-        $this->middleware('permission:faqs.update')->only(['update']);
-        $this->middleware('permission:faqs.delete')->only(['destroy']);
-    }
     public function index()
     {
         try {

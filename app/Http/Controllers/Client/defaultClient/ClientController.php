@@ -102,7 +102,7 @@ class ClientController extends Controller
             $client->client_name_with_logo = $request->client_name_with_logo ? true : false;
 
             if ($request->hasFile("logo")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('logo'), 'client_logo', 800, 600);
+                $image_url = $this->fileUpload->imageUploader($request->file('logo'), 'client_logo');
                 $client->logo = $image_url;
             }
 
@@ -204,7 +204,7 @@ class ClientController extends Controller
             $client->location_type = $request->location_type ?? $client->location_type;
 
             if ($request->hasFile("logo")) {
-                $image_url = $this->fileUpload->imageUploader($request->file('logo'), 'client_logo', 800, 600, $client->logo);
+                $image_url = $this->fileUpload->imageUploader($request->file('logo'), 'client_logo', $client->logo);
                 $client->logo = $image_url;
             }
 
