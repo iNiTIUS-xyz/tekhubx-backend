@@ -101,9 +101,21 @@ class SingleWorkOrderResource extends JsonResource
         $paychange = PayChange::where('work_order_unique_id', $this->work_order_unique_id)->where('status', 'Accept')->first();
         $expenseRequest = ExpenseRequest::where('work_order_unique_id', $this->work_order_unique_id)->where('status', 'Accept')->first();
 
-        $documents = collect($this->documents_file)->map(function ($file) {
-            return asset('storage/' . ltrim($file, '/'));
-        })->values()->toArray();
+        $files = $this->documents_file;
+
+        // If it's a JSON string, decode it
+        if (is_string($files)) {
+            $files = json_decode($files, true);
+        }
+
+        // Now map through properly
+        $documents = collect($files)
+            ->filter() // remove null/empty
+            ->map(function ($file) {
+                return asset('storage/' . ltrim($file, '/'));
+            })
+            ->values()
+            ->toArray();
         return [
             'id' => $this->id,
             'uuid' => $this->uuid,
