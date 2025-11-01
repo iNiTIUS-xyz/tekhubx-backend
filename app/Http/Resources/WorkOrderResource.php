@@ -125,9 +125,9 @@ class WorkOrderResource extends JsonResource
             $tab_status = 'Done';
         } elseif ($this->assigned_status === 'Complete') {
             $tab_status = 'Approved';
-        }elseif ($toDate && $toDate->equalTo(Carbon::today())) {
+        } elseif ($toDate && $toDate->equalTo(Carbon::today())) {
             $tab_status = 'In-Flight';
-        }else {
+        } else {
             $tab_status = 'All';
             // $tab_status = ['Draft', 'Published', 'Assigned', 'Done', 'Approved', 'In-Flight', 'All'];
         }
@@ -169,10 +169,10 @@ class WorkOrderResource extends JsonResource
             'through_time' => $this->through_time,
             // 'documents_file' => $this->documents_file,
             'documents_file' => collect($this->documents_file)->map(function ($file) {
-                // Remove leading slash if exists, then prepend storage/
-                $path = ltrim($file, '/');
-                return asset('storage/' . $path);
-            })->toArray(),
+                // Clean the path: remove leading slashes
+                $cleanPath = ltrim($file, '/');
+                return asset('storage/' . $cleanPath);
+            })->values()->toArray(),
             'buyer_custom_field' => $this->buyer_custom_field,
             'manager' => $this->manager,
             'shipments' => Shipment::whereIn('id', $shipmentIds)->get(),
