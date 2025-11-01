@@ -19,6 +19,7 @@ class PaymentSettingController extends Controller
             $settings = PaymentSetting::all();
             return response()->json([
                 'status' => 'success',
+                'message' => 'Payment settings found successfully',
                 'data' => $settings
             ]);
         } catch (\Exception $error) {
@@ -44,9 +45,9 @@ class PaymentSettingController extends Controller
                 return response()->json(['error' => 'Setting not found'], 404);
             }
 
-
             return response()->json([
                 'status' => 'success',
+                'message' => 'Payment setting found successfully',
                 'data' => $setting
             ]);
         } catch (\Exception $error) {

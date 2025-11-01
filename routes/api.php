@@ -26,6 +26,7 @@ use App\Http\Controllers\Common\ChatMessageController;
 use App\Http\Controllers\Admin\Country\StateController;
 use App\Http\Controllers\Admin\DocumentationController;
 use App\Http\Controllers\Client\SubscriptionController;
+use App\Http\Controllers\Admin\PaymentSettingController;
 use App\Http\Controllers\Admin\Country\CountryController;
 use App\Http\Controllers\Admin\ExpenseCategoryController;
 use App\Http\Controllers\Admin\service\ServiceController;
@@ -257,6 +258,11 @@ Route::group(['middleware' => 'auth.admin'], function () {
     Route::get('/social-media/{id}', [SocialMediaController::class, 'show'])->name('social-media.show');
     Route::put('/social-media/{id}', [SocialMediaController::class, 'update'])->name('social-media.update');
     Route::delete('/social-media/{id}', [SocialMediaController::class, 'destroy'])->name('social-media.destroy');
+
+    Route::get('admin/payment-settings', [PaymentSettingController::class, 'index']);
+    Route::get('admin/payment-settings/{id}', [PaymentSettingController::class, 'show']);
+    Route::post('admin/payment-settings', [PaymentSettingController::class, 'store']);
+    Route::put('admin/payment-settings/{id}', [PaymentSettingController::class, 'update']);
 });
 
 //Client

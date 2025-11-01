@@ -167,7 +167,12 @@ class WorkOrderResource extends JsonResource
             'between_time' => $this->between_time,
             'through_date' => $this->through_date,
             'through_time' => $this->through_time,
-            'documents_file' => $this->documents_file,
+            // 'documents_file' => $this->documents_file,
+            'documents_file' => collect($this->documents_file)->map(function ($file) {
+                // Remove leading slash if exists, then prepend storage/
+                $path = ltrim($file, '/');
+                return asset('storage/' . $path);
+            })->toArray(),
             'buyer_custom_field' => $this->buyer_custom_field,
             'manager' => $this->manager,
             'shipments' => Shipment::whereIn('id', $shipmentIds)->get(),

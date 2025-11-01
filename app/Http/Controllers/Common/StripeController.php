@@ -528,7 +528,14 @@ class StripeController extends Controller
             $payment = Payment::where('work_order_unique_id', $work_order_id)->where('client_id', $client->uuid)->first();
 
             if (!$payment || !$paymentIntentSave || !$work_order) {
-                throw new \Exception("Missing required payment or work order data.");
+                DB::rollBack();
+                Log::channel('payment_log')->error('Missing required payment or work order data.');
+                $systemError = ApiResponseHelper::formatErrors(ApiResponseHelper::SYSTEM_ERROR, 'Missing required payment or work order data.');
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $systemError,
+                ], 500);
+                // throw new \Exception("Missing required payment or work order data.");
             }
 
             // Calculate fees
@@ -561,7 +568,14 @@ class StripeController extends Controller
                 $paymentIntentSave->capture_status = $paymentIntent->status;
                 $paymentIntentSave->capture_id = $paymentIntent->id;
             } else {
-                throw new \Exception("Unexpected PaymentIntent status: " . $paymentIntent->status);
+                DB::rollBack();
+                Log::channel('payment_log')->error('Unexpected PaymentIntent status: ' . $paymentIntent->status);
+                $systemError = ApiResponseHelper::formatErrors(ApiResponseHelper::SYSTEM_ERROR, 'Unexpected PaymentIntent status: ' . $paymentIntent->status);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $systemError,
+                ]);
+                // throw new \Exception("Unexpected PaymentIntent status: " . $paymentIntent->status);
             }
 
             // Transfer funds to admin
