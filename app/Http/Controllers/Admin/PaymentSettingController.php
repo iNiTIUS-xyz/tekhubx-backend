@@ -82,6 +82,12 @@ class PaymentSettingController extends Controller
                 ], 500);
             }
 
+            $existingSetting = PaymentSetting::where('gateway_name', 'stripe')->first();
+
+            if ($existingSetting) {
+                return response()->json(['error' => 'Stripe payment setting already exists'], 422);
+            }
+
             $setting = PaymentSetting::create(array_merge(
                 ['gateway_name' => 'stripe'],
                 $validator->validated()
@@ -106,7 +112,6 @@ class PaymentSettingController extends Controller
     // PUT /admin/payment-settings/{id}
     public function update(Request $request, $id)
     {
-
         try {
 
             $setting = PaymentSetting::find($id);
@@ -131,7 +136,12 @@ class PaymentSettingController extends Controller
                 ], 500);
             }
 
-            $setting->update($validator->validated());
+            $setting->stripe_secret = $request->stripe_secret ?? $setting->stripe_secret;
+            $setting->stripe_public = $request->stripe_public ?? $setting->stripe_public;
+            $setting->stripe_webhook_secret = $request->stripe_webhook_secret ?? $setting->stripe_webhook_secret;
+            $setting->stripe_account_id = $request->stripe_account_id ?? $setting->stripe_account_id;
+            $setting->stripe_mode = $request->stripe_mode ?? $setting->stripe_mode;
+            $setting->save();
 
             return response()->json([
                 'status' => 'success',
