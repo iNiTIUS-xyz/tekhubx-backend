@@ -262,7 +262,7 @@ Route::group(['middleware' => 'auth.admin'], function () {
     Route::get('admin/payment-settings', [PaymentSettingController::class, 'index']);
     Route::get('admin/payment-settings/{id}', [PaymentSettingController::class, 'show']);
     Route::post('admin/payment-settings', [PaymentSettingController::class, 'store']);
-    Route::put('admin/payment-settings/{id}', [PaymentSettingController::class, 'update']);
+    Route::post('admin/payment-settings', [PaymentSettingController::class, 'update']);
 });
 
 //Client

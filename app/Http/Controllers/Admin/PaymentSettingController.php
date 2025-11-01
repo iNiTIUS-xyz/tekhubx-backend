@@ -110,11 +110,11 @@ class PaymentSettingController extends Controller
     }
 
     // PUT /admin/payment-settings/{id}
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         try {
 
-            $setting = PaymentSetting::find($id);
+            $setting = PaymentSetting::find($request->id);
 
             if (!$setting) {
                 return response()->json(['error' => 'Setting not found'], 404);
