@@ -100,6 +100,10 @@ class SingleWorkOrderResource extends JsonResource
 
         $paychange = PayChange::where('work_order_unique_id', $this->work_order_unique_id)->where('status', 'Accept')->first();
         $expenseRequest = ExpenseRequest::where('work_order_unique_id', $this->work_order_unique_id)->where('status', 'Accept')->first();
+
+        $documents = collect($this->documents_file)->map(function ($file) {
+            return asset('storage/' . ltrim($file, '/'));
+        })->values()->toArray();
         return [
             'id' => $this->id,
             'uuid' => $this->uuid,
@@ -134,11 +138,7 @@ class SingleWorkOrderResource extends JsonResource
             'through_date' => $this->through_date,
             'through_time' => $this->through_time,
             // 'documents_file' => $this->documents_file,
-            'documents_file' => collect($this->documents_file)->map(function ($file) {
-                // Clean the path: remove leading slashes
-                $cleanPath = ltrim($file, '/');
-                return asset('storage/' . $cleanPath);
-            })->values()->toArray(),
+            'documents_file' => $documents,
             'buyer_custom_field' => $this->buyer_custom_field,
             'manager' => $this->manager,
             'shipments' => Shipment::whereIn('id', $shipmentIds)->get(),
