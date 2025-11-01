@@ -132,6 +132,22 @@ class WorkOrderResource extends JsonResource
             // $tab_status = ['Draft', 'Published', 'Assigned', 'Done', 'Approved', 'In-Flight', 'All'];
         }
 
+        $files = $this->documents_file;
+
+        // If it's a JSON string, decode it
+        if (is_string($files)) {
+            $files = json_decode($files, true);
+        }
+
+        // Now map through properly
+        $documents = collect($files)
+            ->filter() // remove null/empty
+            ->map(function ($file) {
+                return asset('storage/' . ltrim($file, '/'));
+            })
+            ->values()
+            ->toArray();
+
         return [
             'id' => $this->id,
             'uuid' => $this->uuid,
@@ -168,11 +184,7 @@ class WorkOrderResource extends JsonResource
             'through_date' => $this->through_date,
             'through_time' => $this->through_time,
             // 'documents_file' => $this->documents_file,
-            'documents_file' => collect($this->documents_file)->map(function ($file) {
-                // Clean the path: remove leading slashes
-                $cleanPath = ltrim($file, '/');
-                return asset('storage/' . $cleanPath);
-            })->values()->toArray(),
+            'documents_file' => $documents,
             'buyer_custom_field' => $this->buyer_custom_field,
             'manager' => $this->manager,
             'shipments' => Shipment::whereIn('id', $shipmentIds)->get(),
