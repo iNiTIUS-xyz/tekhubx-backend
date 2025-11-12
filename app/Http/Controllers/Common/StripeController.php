@@ -20,6 +20,7 @@ use Stripe\PaymentMethod;
 use App\Models\BankAccount;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
+use App\Models\PaymentSetting;
 use App\Utils\ServerErrorMask;
 use App\Models\WebhookResponse;
 use App\Models\PaymentIntentSave;
@@ -51,8 +52,8 @@ class StripeController extends Controller
                 'errors' => $formattedErrors,
             ], 422);
         }
-
-        Stripe::setApiKey(config('stripe.STRIPE_SECRET'));
+        $stripe = PaymentSetting::where('gateway_name', 'stripe')->first();
+        Stripe::setApiKey($stripe->stripe_secret);
 
         $profile = Profile::where('user_id', Auth::user()->id)->first();
         if (!$profile) {
@@ -98,12 +99,7 @@ class StripeController extends Controller
                 'type' => 'account_onboarding',
             ]);
 
-            // $user = Auth::user();
-            // $user->stripe_account_id = $account->id;
-            // $user->stripe_email = $request->email;
-            // $user->save();
             DB::commit();
-            // return redirect($link->url);
             return response()->json([
                 'status' => 'success',
                 'message' => 'Stripe account connected successfully',
@@ -147,7 +143,9 @@ class StripeController extends Controller
             ], 422);
         }
 
-        Stripe::setApiKey(config('stripe.STRIPE_SECRET'));
+        $stripe = PaymentSetting::where('gateway_name', 'stripe')->first();
+
+        Stripe::setApiKey($stripe->stripe_secret);
 
         $user = Auth::user();
 
@@ -289,7 +287,9 @@ class StripeController extends Controller
             return response()->json(['errors' => $formattedErrors], 422);
         }
 
-        Stripe::setApiKey(config('stripe.STRIPE_SECRET'));
+        $stripe = PaymentSetting::where('gateway_name', 'stripe')->first();
+
+        Stripe::setApiKey($stripe->stripe_secret);
 
         try {
             $user = Auth::user();
@@ -332,7 +332,9 @@ class StripeController extends Controller
 
     public function stripeCallback(Request $request)
     {
-        Stripe::setApiKey(config('stripe.STRIPE_SECRET'));
+        $stripe = PaymentSetting::where('gateway_name', 'stripe')->first();
+
+        Stripe::setApiKey($stripe->stripe_secret);
 
         try {
             // Retrieve the authenticated user
@@ -380,7 +382,9 @@ class StripeController extends Controller
 
     public function stripeCallbackTwo(Request $request)
     {
-        Stripe::setApiKey(config('stripe.STRIPE_SECRET'));
+        $stripe = PaymentSetting::where('gateway_name', 'stripe')->first();
+
+        Stripe::setApiKey($stripe->stripe_secret);
 
 
         $accountId = $request->query('account_id'); // or $request->account_id
@@ -429,7 +433,9 @@ class StripeController extends Controller
 
     public function workOrderAssigne($client_id, $work_order_unique_id, $provider_id)
     {
-        Stripe::setApiKey(config('stripe.STRIPE_SECRET'));
+        $stripe = PaymentSetting::where('gateway_name', 'stripe')->first();
+
+        Stripe::setApiKey($stripe->stripe_secret);
 
         $user = $client_id;
         $work_order = WorkOrder::where('work_order_unique_id', $work_order_unique_id)->first();
@@ -515,7 +521,9 @@ class StripeController extends Controller
         }
 
         // Set Stripe API Key
-        Stripe::setApiKey(config('stripe.STRIPE_SECRET'));
+        $stripe = PaymentSetting::where('gateway_name', 'stripe')->first();
+
+        Stripe::setApiKey($stripe->stripe_secret);
 
         try {
             DB::beginTransaction();
@@ -694,7 +702,9 @@ class StripeController extends Controller
         }
 
         // Set Stripe API Key
-        Stripe::setApiKey(config('stripe.STRIPE_SECRET'));
+        $stripe = PaymentSetting::where('gateway_name', 'stripe')->first();
+
+        Stripe::setApiKey($stripe->stripe_secret);
 
         try {
             DB::beginTransaction();
@@ -761,7 +771,9 @@ class StripeController extends Controller
             ], 200);
         }
         // Stripe
-        $stripe = new StripeClient(config('stripe.STRIPE_SECRET'));
+        $stripe_settings = PaymentSetting::where('gateway_name', 'stripe')->first();
+
+        $stripe = new StripeClient($stripe_settings->stripe_secret);
 
         $client = Auth::user();
 
@@ -843,7 +855,9 @@ class StripeController extends Controller
 
         if (isset($request->session_id)) {
 
-            $stripe = new StripeClient(config('stripe.STRIPE_SECRET'));
+            $stripe_settings = PaymentSetting::where('gateway_name', 'stripe')->first();
+
+            $stripe = new StripeClient($stripe_settings->stripe_secret);
 
             $session_response = $stripe->checkout->sessions->retrieve($request->session_id);
 
@@ -894,7 +908,9 @@ class StripeController extends Controller
             return response('Missing signature', 400);
         }
         // Set Stripe API Key
-        Stripe::setApiKey(config('stripe.STRIPE_SECRET'));
+        $stripe_settings = PaymentSetting::where('gateway_name', 'stripe')->first();
+
+        Stripe::setApiKey($stripe_settings->stripe_secret);
 
         // Retrieve the webhook payload and signature
         $payload = $request->getContent();
@@ -1055,7 +1071,9 @@ class StripeController extends Controller
             ], 404);
         }
 
-        Stripe::setApiKey(config('stripe.STRIPE_SECRET'));
+        $stripe_settings = PaymentSetting::where('gateway_name', 'stripe')->first();
+
+        Stripe::setApiKey($stripe_settings->stripe_secret);
 
         try {
             // Delete the Stripe account
