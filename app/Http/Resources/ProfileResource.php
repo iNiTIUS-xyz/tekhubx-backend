@@ -19,22 +19,26 @@ class ProfileResource extends JsonResource
     public function toArray(Request $request): array
     {
         $user = User::find($this->user_id);
-        if($user->organization_role == 'Provider Company' || $user->organization_role == 'Provider'){
+        if ($user->organization_role == 'Provider Company' || $user->organization_role == 'Provider') {
             $rating = Review::where('tag', 'client')
-            ->where('provider_id', $this->user_id)
-            ->avg('rating');
-        }else{
+                ->where('provider_id', $this->user_id)
+                ->avg('rating');
+        } else {
 
             $rating = Review::where('tag', 'provider')
-            ->where('client_id', $this->user_id)
-            ->avg('rating');
+                ->where('client_id', $this->user_id)
+                ->avg('rating');
         }
         $jobs = WorkOrder::where('assigned_id', $this->id)->where('status', 'Done')->count();
 
         $last_active = User::find($this->user_id);
         $lastActiveTime = Carbon::parse($last_active->updated_at);
         $humanReadable = $lastActiveTime->diffForHumans();
-        
+
+        // Check if the authenticated user is viewing their own profile
+        $isOwnProfile = $request->user() && $request->user()->id === $this->user_id;
+        $lastActive = $isOwnProfile ? 'Active now' : $humanReadable;
+
         return [
             'id' => $this->id,
             'first_name' => $this->first_name,
@@ -53,7 +57,7 @@ class ProfileResource extends JsonResource
             'profile_image' => $this->profile_image,
             'rating' => $rating ?? 0,
             'jobs' => $jobs ?? 0,
-            'last_active' => $humanReadable,
+            'last_active' => $lastActive,
             'talent_type' => 'tekhubx'
         ];
     }
