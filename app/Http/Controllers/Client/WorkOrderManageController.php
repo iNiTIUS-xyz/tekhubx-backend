@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Models\ClientManager;
 use App\Services\UserService;
 use App\Utils\ServerErrorMask;
+use Illuminate\Validation\Rule;
 use App\Mail\WelcomeManagerMail;
 use App\Helpers\ApiResponseHelper;
 use Illuminate\Support\Facades\DB;
@@ -53,8 +54,28 @@ class WorkOrderManageController extends Controller
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'user_name' => 'nullable|string|max:255|unique:client_managers|required_without:email',
-            'email' => 'nullable|string|max:255|unique:client_managers|required_without:user_name|email',
+            // 'user_name' => 'nullable|string|max:255|unique:client_managers|required_without:email',
+            // 'email' => 'nullable|string|max:255|unique:client_managers|required_without:user_name|email',
+            'user_name' => [
+                'nullable',
+                'string',
+                'max:255',
+                'required_without:email',
+                Rule::unique('client_managers')
+                    ->where(function ($query) {
+                        $query->where('client_id', Auth::user()->uuid);
+                    }),
+            ],
+
+            'email' => [
+                'nullable',
+                'email',
+                'required_without:user_name',
+                Rule::unique('client_managers')
+                    ->where(function ($query) {
+                        $query->where('client_id', Auth::user()->uuid);
+                    }),
+            ],
             'country_id' => 'required|exists:countries,id',
             'state' => 'nullable|string|max:255',
             'zip_code' => 'nullable|string|max:10',
