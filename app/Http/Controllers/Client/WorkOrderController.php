@@ -2462,7 +2462,7 @@ class WorkOrderController extends Controller
                     $query->select('id', 'display_name', 'location_type', 'address_line_1', 'address_line_2', 'city', 'state_id', 'state_name', 'country_id', 'country_name', 'zip_code', 'latitude', 'longitude', 'phone', 'email', 'note');
                 },
                 'manager' => function ($query) {
-                    $query->select('id', 'name', 'email', 'address_one', 'address_two', 'city', 'country_id', 'state', 'zip_code');
+                    $query->select('id', 'name', 'email', 'address_one', 'address_two', 'country_id', 'state', 'zip_code');
                 },
                 'additionalContacts' => function ($query) {
                     $query->select('id', 'work_order_unique_id', 'name', 'title', 'phone', 'ext', 'email', 'note');
