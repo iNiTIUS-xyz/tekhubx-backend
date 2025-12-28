@@ -172,13 +172,13 @@ class WorkOrderController extends Controller
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Account not found, please setup your account.',
+                'message' => 'Work order cannot be submitted because the Stripe account is not connected yet.',
             ], 500);
         }
         if ($user->stripe_payment_method_id == null) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Bank account not found, please setup your bank account.',
+                'message' => 'Work order cannot be submitted because the Stripe account is not connected yet.',
             ], 500);
         }
         $subscription_check = Subscription::where('uuid', Auth::user()->uuid)->first();
@@ -607,87 +607,6 @@ class WorkOrderController extends Controller
 
         return $shipment_arr;
     }
-    // private function storeDocuments($request)
-    // {
-    //     $allFilePaths = [];
-    //     $uploadedFilePaths = [];
-    //     $selectedFilePaths = [];
-
-    //     try {
-    //         Log::info("Request Input: " . json_encode($request->all()));
-    //         Log::info("Files in Request: " . json_encode($request->file()));
-
-    //         if ($request->hasFile('new_documents_file')) {
-    //             // Check for correct structure: new_documents_file[0][documents_file]
-    //             foreach ($request->file('new_documents_file') as $index => $fileArray) {
-    //                 if ($request->hasFile("new_documents_file.{$index}.documents_file")) {
-    //                     $file = $request->file("new_documents_file.{$index}.documents_file");
-    //                     if ($file->isValid()) {
-    //                         $originalName = $file->getClientOriginalName();
-    //                         $size = $file->getSize();
-    //                         $mimeType = $file->getMimeType();
-    //                         $docuFilePath = $file->store('work/documents', 'public');
-    //                         Log::info("Stored file: {$originalName} at {$docuFilePath}, Size: {$size} bytes, MIME: {$mimeType}");
-
-    //                         $document = DocumentLibrary::create([
-    //                             'uuid' => Auth::user()->uuid,
-    //                             'name' => $originalName,
-    //                             'file_path' => $docuFilePath,
-    //                         ]);
-
-    //                         $uploadedFilePaths[] = $document->file_path;
-    //                     } else {
-    //                         Log::warning("Invalid file at index {$index}: " . $file->getClientOriginalName() . " - Error: " . $file->getErrorMessage());
-    //                     }
-    //                 }
-    //             }
-
-    //             // Fallback for incorrect structure: new_documents_file[0]documents_file
-    //             if ($request->hasFile('new_documents_file.0documents_file')) {
-    //                 $file = $request->file('new_documents_file.0documents_file');
-    //                 if ($file->isValid()) {
-    //                     $originalName = $file->getClientOriginalName();
-    //                     $size = $file->getSize();
-    //                     $mimeType = $file->getMimeType();
-    //                     $docuFilePath = $file->store('work/documents', 'public');
-    //                     Log::info("Stored file (fallback): {$originalName} at {$docuFilePath}, Size: {$size} bytes, MIME: {$mimeType}");
-
-    //                     $document = DocumentLibrary::create([
-    //                         'uuid' => Auth::user()->uuid,
-    //                         'name' => $originalName,
-    //                         'file_path' => $docuFilePath,
-    //                     ]);
-
-    //                     $uploadedFilePaths[] = $document->file_path;
-    //                 } else {
-    //                     Log::warning("Invalid file (fallback): " . $file->getClientOriginalName() . " - Error: " . $file->getErrorMessage());
-    //                 }
-    //             }
-    //         }
-    //         if (empty($uploadedFilePaths)) {
-    //             Log::info("No valid files found in new_documents_file");
-    //         }
-
-    //         if ($request->has('old_documents_id')) {
-    //             $oldDocumentsId = $request->input('old_documents_id');
-    //             if (!is_array($oldDocumentsId)) {
-    //                 $oldDocumentsId = [$oldDocumentsId];
-    //             }
-
-    //             $selectedFilePaths = DocumentLibrary::whereIn('id', $oldDocumentsId)
-    //                 ->pluck('file_path')
-    //                 ->toArray();
-    //             Log::info("Selected File Paths from old_documents_id: " . json_encode($selectedFilePaths));
-    //         }
-
-    //         $allFilePaths = array_merge($uploadedFilePaths, $selectedFilePaths);
-    //         Log::info("All File Paths: " . json_encode($allFilePaths));
-    //     } catch (\Exception $e) {
-    //         Log::error("Error storing documents: " . $e->getMessage());
-    //     }
-
-    //     return $allFilePaths;
-    // }
     private function storeDocuments($request)
     {
         $allFilePaths       = [];
@@ -776,7 +695,6 @@ class WorkOrderController extends Controller
 
         return $allFilePaths;
     }
-
 
     public function getDocuments()
     {
@@ -2544,7 +2462,7 @@ class WorkOrderController extends Controller
                     $query->select('id', 'display_name', 'location_type', 'address_line_1', 'address_line_2', 'city', 'state_id', 'state_name', 'country_id', 'country_name', 'zip_code', 'latitude', 'longitude', 'phone', 'email', 'note');
                 },
                 'manager' => function ($query) {
-                    $query->select('id', 'name', 'email', 'address', 'country_id', 'state', 'zip_code');
+                    $query->select('id', 'name', 'email', 'address_one', 'address_two', 'city', 'country_id', 'state', 'zip_code');
                 },
                 'additionalContacts' => function ($query) {
                     $query->select('id', 'work_order_unique_id', 'name', 'title', 'phone', 'ext', 'email', 'note');
@@ -2652,7 +2570,7 @@ class WorkOrderController extends Controller
                     'id' => $workOrder->manager->id,
                     'name' => $workOrder->manager->name,
                     'email' => $workOrder->manager->email,
-                    'address' => $workOrder->manager->address,
+                    'address' => $workOrder->manager->address_one ?? null . '-' . $workOrder->manager->address_two ?? null,
                     'state' => $workOrder->manager->state_name ? $workOrder->manager->state_name->name : null,
                     'country' => $workOrder->manager->country ? $workOrder->manager->country->name : null,
                     'zip_code' => $workOrder->manager->zip_code,
