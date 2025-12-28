@@ -27,6 +27,7 @@ use App\Models\WorkOrderReport;
 use App\Models\WorkSubCategory;
 use App\Services\AvaTaxService;
 use App\Services\CommonService;
+use App\Jobs\CreateWorkOrderJob;
 use App\Models\ProviderCheckout;
 use App\Models\AdditionalContact;
 use App\Models\QualificationType;
@@ -200,164 +201,172 @@ class WorkOrderController extends Controller
 
             DB::beginTransaction();
 
-            $uniqueMd5 = $this->generateUniqueWorkOrderId();
+            // $uniqueMd5 = $this->generateUniqueWorkOrderId();
 
-            if ($request->state_id) {
+            // if ($request->state_id) {
 
-                $location_id = $this->getLocationId($request);
-            }
-            $additionalContactIds = $this->storeAdditionalContacts($request, $uniqueMd5);
-            $shipment_arr = $this->storeShipments($request, $uniqueMd5);
-            $allFilePaths = $this->storeDocuments($request);
+            //     $location_id = $this->getLocationId($request);
+            // }
+            // $additionalContactIds = $this->storeAdditionalContacts($request, $uniqueMd5);
+            // $shipment_arr = $this->storeShipments($request, $uniqueMd5);
+            // $allFilePaths = $this->storeDocuments($request);
 
-            $tasks = $request->tasks;
+            // $tasks = $request->tasks;
 
-            if ($request->hasFile('file')) {
+            // if ($request->hasFile('file')) {
 
-                if ($request->hasFile('file')) {
-                    $file = $request->file('file');
-                    if ($file->isValid()) {
-                        $filePath = $file->store('tasks/files', 'public');
-                        foreach ($tasks as $task) {
-                            $task = (object) $task;
-                            if (isset($task->file_name) && $task->file_name === 'abc.pdf') { // Match the specific file_name if needed
-                                $task->file_name = $filePath;
-                            }
-                        }
-                        unset($task);
-                    } else {
-                        throw new \Exception('File is not valid');
-                    }
-                }
+            //     if ($request->hasFile('file')) {
+            //         $file = $request->file('file');
+            //         if ($file->isValid()) {
+            //             $filePath = $file->store('tasks/files', 'public');
+            //             foreach ($tasks as $task) {
+            //                 $task = (object) $task;
+            //                 if (isset($task->file_name) && $task->file_name === 'abc.pdf') { // Match the specific file_name if needed
+            //                     $task->file_name = $filePath;
+            //                 }
+            //             }
+            //             unset($task);
+            //         } else {
+            //             throw new \Exception('File is not valid');
+            //         }
+            //     }
 
-                $tasksJson = json_encode($tasks);
-            } else {
-                $tasksJson = json_encode($request->tasks);
-            }
+            //     $tasksJson = json_encode($tasks);
+            // } else {
+            //     $tasksJson = json_encode($request->tasks);
+            // }
 
 
-            if ($request->pay_type == 'Hourly') {
-                $total = $request->hourly_rate * $request->max_hours;
-            }
-            if ($request->pay_type == 'Blended') {
-                $additional = $request->additional_hourly_rate * $request->max_additional_hour;
-                $fixed = $request->fixed_payment;
-                $total = $fixed + $additional ?? 0;
-            }
+            // if ($request->pay_type == 'Hourly') {
+            //     $total = $request->hourly_rate * $request->max_hours;
+            // }
+            // if ($request->pay_type == 'Blended') {
+            //     $additional = $request->additional_hourly_rate * $request->max_additional_hour;
+            //     $fixed = $request->fixed_payment;
+            //     $total = $fixed + $additional ?? 0;
+            // }
 
-            if ($request->pay_type == 'Fixed') {
-                $total = $request->total_pay ?? 0.0;
-            }
-            if ($request->pay_type == 'Per Device') {
-                $total = $request->per_device_rate * $request->max_device;
-            }
+            // if ($request->pay_type == 'Fixed') {
+            //     $total = $request->total_pay ?? 0.0;
+            // }
+            // if ($request->pay_type == 'Per Device') {
+            //     $total = $request->per_device_rate * $request->max_device;
+            // }
 
-            if ($request->remote) {
-                $taxValue = 0.0;
-            } elseif ($request->save_location_id) {
-                $additionalLocation = AdditionalLocation::where('id', $request->save_location_id)->first();
-                $country = Country::where('id', $additionalLocation->country_id)->first();
-                $state = State::where('id', $additionalLocation->state_id)->first();
-            } else {
+            // if ($request->remote) {
+            //     $taxValue = 0.0;
+            // } elseif ($request->save_location_id) {
+            //     $additionalLocation = AdditionalLocation::where('id', $request->save_location_id)->first();
+            //     $country = Country::where('id', $additionalLocation->country_id)->first();
+            //     $state = State::where('id', $additionalLocation->state_id)->first();
+            // } else {
 
-                $country = Country::where('id', $request->country_id)->first();
-                $state = State::where('id', $request->state_id)->first();
-            }
+            //     $country = Country::where('id', $request->country_id)->first();
+            //     $state = State::where('id', $request->state_id)->first();
+            // }
 
             // $taxValue = $this->taxService->calculateTax($state, $country, $request, $total);
 
-            $workOrder = new WorkOrder();
-            $workOrder->uuid = Auth::user()->uuid;
-            $workOrder->user_id = Auth::user()->id;
-            $workOrder->work_order_unique_id = $uniqueMd5;
-            $workOrder->template_id = $request->template_id;
-            $workOrder->work_order_title = $request->work_order_title;
-            $workOrder->default_client_id = $request->default_client_id;
-            $workOrder->project_id = $request->project_id;
-            $workOrder->export_bool = $request->export_bool;
-            $workOrder->counter_offer_bool = $request->counter_offer_bool;
-            $workOrder->gps_bool = $request->gps_bool;
-            $workOrder->service_description_public = $request->service_description_public;
-            $workOrder->service_description_note_private = $request->service_description_note_private;
-            $workOrder->work_category_id = $request->work_category_id;
-            $workOrder->additional_work_category_id = $request->additional_work_category_id;
-            $workOrder->service_type_id = $request->service_type_id;
-            $workOrder->qualification_type = $request->has('qualification_type') ? json_encode($request->qualification_type) : null;
-            $workOrder->location_id = $location_id ?? $request->save_location_id ?? $request->remote;
-            $workOrder->additional_contact_id = json_encode($additionalContactIds);
-            $workOrder->documents_file = json_encode($allFilePaths);
-            $workOrder->schedule_type = $request->schedule_type;
-            $workOrder->schedule_date = $request->schedule_date;
-            $workOrder->schedule_time = $request->schedule_time;
-            $workOrder->time_zone = $request->time_zone;
-            $workOrder->schedule_date_between_1 = $request->schedule_date_between_1;
-            $workOrder->schedule_date_between_2 = $request->schedule_date_between_2;
-            $workOrder->schedule_time_between_1 = $request->schedule_time_between_1;
-            $workOrder->schedule_time_between_2 = $request->schedule_time_between_2;
-            $workOrder->between_date = $request->between_date;
-            $workOrder->between_time = $request->between_time;
-            $workOrder->through_date = $request->through_date;
-            $workOrder->through_time = $request->through_time;
-            $workOrder->work_order_manager_id = $request->work_order_manager_id;
-            $workOrder->tasks = $tasksJson ?? null;
-            $workOrder->buyer_custom_field = $request->buyer_custom_field;
-            $workOrder->pay_type = $request->pay_type;
-            $workOrder->hourly_rate = ((float) $request->hourly_rate) ?? 0.0;
-            $workOrder->max_hours = $request->max_hours;
-            $workOrder->approximate_hour_complete = $request->approximate_hour_complete;
-            $workOrder->total_pay = ((float) $request->total_pay) ?? 0.0;
-            $workOrder->per_device_rate = ((float) $request->per_device_rate) ?? 0.0;
-            $workOrder->max_device = $request->max_device;
-            $workOrder->fixed_payment = $request->fixed_payment;
-            $workOrder->fixed_hours = ((float) $request->fixed_hours) ?? 0.0;
-            $workOrder->additional_hourly_rate = $request->additional_hourly_rate;
-            $workOrder->max_additional_hour = $request->max_additional_hour;
-            $workOrder->labor = $total;
-            $workOrder->state_tax = $taxValue ?? 0.0;
-            $workOrder->bank_account_id = Auth::user()->stripe_account_id;
-            $workOrder->rule_id = $request->rule_id;
-            $workOrder->shipment_id = json_encode($shipment_arr);
-            $workOrder->status = $request->status ?? 'Published';
+            // $workOrder = new WorkOrder();
+            // $workOrder->uuid = Auth::user()->uuid;
+            // $workOrder->user_id = Auth::user()->id;
+            // $workOrder->work_order_unique_id = $uniqueMd5;
+            // $workOrder->template_id = $request->template_id;
+            // $workOrder->work_order_title = $request->work_order_title;
+            // $workOrder->default_client_id = $request->default_client_id;
+            // $workOrder->project_id = $request->project_id;
+            // $workOrder->export_bool = $request->export_bool;
+            // $workOrder->counter_offer_bool = $request->counter_offer_bool;
+            // $workOrder->gps_bool = $request->gps_bool;
+            // $workOrder->service_description_public = $request->service_description_public;
+            // $workOrder->service_description_note_private = $request->service_description_note_private;
+            // $workOrder->work_category_id = $request->work_category_id;
+            // $workOrder->additional_work_category_id = $request->additional_work_category_id;
+            // $workOrder->service_type_id = $request->service_type_id;
+            // $workOrder->qualification_type = $request->has('qualification_type') ? json_encode($request->qualification_type) : null;
+            // $workOrder->location_id = $location_id ?? $request->save_location_id ?? $request->remote;
+            //$workOrder->additional_contact_id = json_encode($additionalContactIds);
+            // $workOrder->documents_file = json_encode($allFilePaths);
+            // $workOrder->schedule_type = $request->schedule_type;
+            // $workOrder->schedule_date = $request->schedule_date;
+            // $workOrder->schedule_time = $request->schedule_time;
+            // $workOrder->time_zone = $request->time_zone;
+            // $workOrder->schedule_date_between_1 = $request->schedule_date_between_1;
+            // $workOrder->schedule_date_between_2 = $request->schedule_date_between_2;
+            // $workOrder->schedule_time_between_1 = $request->schedule_time_between_1;
+            // $workOrder->schedule_time_between_2 = $request->schedule_time_between_2;
+            // $workOrder->between_date = $request->between_date;
+            // $workOrder->between_time = $request->between_time;
+            // $workOrder->through_date = $request->through_date;
+            // $workOrder->through_time = $request->through_time;
+            // $workOrder->work_order_manager_id = $request->work_order_manager_id;
+            //$workOrder->tasks = $tasksJson ?? null;
+            // $workOrder->buyer_custom_field = $request->buyer_custom_field;
+            // $workOrder->pay_type = $request->pay_type;
+            // $workOrder->hourly_rate = ((float) $request->hourly_rate) ?? 0.0;
+            // $workOrder->max_hours = $request->max_hours;
+            // $workOrder->approximate_hour_complete = $request->approximate_hour_complete;
+            // $workOrder->total_pay = ((float) $request->total_pay) ?? 0.0;
+            // $workOrder->per_device_rate = ((float) $request->per_device_rate) ?? 0.0;
+            // $workOrder->max_device = $request->max_device;
+            // $workOrder->fixed_payment = $request->fixed_payment;
+            // $workOrder->fixed_hours = ((float) $request->fixed_hours) ?? 0.0;
+            // $workOrder->additional_hourly_rate = $request->additional_hourly_rate;
+            // $workOrder->max_additional_hour = $request->max_additional_hour;
+            //$workOrder->labor = $total;
+            //$workOrder->state_tax = $taxValue ?? 0.0;
+            //$workOrder->bank_account_id = Auth::user()->stripe_account_id;
+            // $workOrder->rule_id = $request->rule_id;
+            //$workOrder->shipment_id = json_encode($shipment_arr);
+            //$workOrder->status = $request->status ?? 'Published';
 
-            if ($workOrder->save()) {
-                $totalFees = 0;
-                $service_fees = ServiceFees::where('plan_id', $subscription_check->plan_id)->where('status', 'Active')->get();
+            // if ($workOrder->save()) {
+            //     $totalFees = 0;
+            //     $service_fees = ServiceFees::where('plan_id', $subscription_check->plan_id)->where('status', 'Active')->get();
 
-                $service_fees_array = $service_fees->map(function ($serviceFee) {
-                    return [
-                        'name' => $serviceFee->name,
-                        'percentage' => $serviceFee->percentage,
-                    ];
-                })->toArray();
+            //     $service_fees_array = $service_fees->map(function ($serviceFee) {
+            //         return [
+            //             'name' => $serviceFee->name,
+            //             'percentage' => $serviceFee->percentage,
+            //         ];
+            //     })->toArray();
 
-                $payment = new Payment();
-                $payment->client_id = Auth::user()->uuid;
-                $payment->account_id = Auth::user()->stripe_account_id;
-                $payment->payment_unique_id = UniqueIdentifierService::generateUniqueIdentifier(new Payment(), 'payment_unique_id', 'uuid');
-                $payment->work_order_unique_id = $uniqueMd5;
-                $payment->services_fee = json_encode($service_fees_array);
-                $payment->total_labor = $total;
-                $payment->tax = $taxValue ?? 0.0;
-                $payment->status = 'Pending';
-                $payment->transaction_type = 'Payment';
-                $payment->description = 'Payment Create For Work Order';
-                $payment->save();
-            }
-            $history = new HistoryLog();
-            $history->client_id = Auth::user()->id;
-            $history->work_order_unique_id = $uniqueMd5;
-            $history->description = 'Work Order Create.';
-            $history->type = 'client';
-            $history->date_time = now();
-            $history->save();
+            //     $payment = new Payment();
+            //     $payment->client_id = Auth::user()->uuid;
+            //     $payment->account_id = Auth::user()->stripe_account_id;
+            //     $payment->payment_unique_id = UniqueIdentifierService::generateUniqueIdentifier(new Payment(), 'payment_unique_id', 'uuid');
+            //     $payment->work_order_unique_id = $uniqueMd5;
+            //     $payment->services_fee = json_encode($service_fees_array);
+            //     $payment->total_labor = $total;
+            //     $payment->tax = $taxValue ?? 0.0;
+            //     $payment->status = 'Pending';
+            //     $payment->transaction_type = 'Payment';
+            //     $payment->description = 'Payment Create For Work Order';
+            //     $payment->save();
+            // }
+            // $history = new HistoryLog();
+            // $history->client_id = Auth::user()->id;
+            // $history->work_order_unique_id = $uniqueMd5;
+            // $history->description = 'Work Order Create.';
+            // $history->type = 'client';
+            // $history->date_time = now();
+            // $history->save();
 
-            $this->sentNotification->providerNotifyWorkOrderCreate($workOrder);
-            DB::commit();
+            // $this->sentNotification->providerNotifyWorkOrderCreate($workOrder);
+            // DB::commit();
+            // return response()->json([
+            //     'status' => 'success',
+            //     'message' => 'New data inserted',
+            //     'work_order' => new WorkOrderResource($workOrder),
+            // ]);
+            // Dispatch job
+            CreateWorkOrderJob::dispatch($request->all(), $user);
+
+            // Immediate response
             return response()->json([
                 'status' => 'success',
-                'message' => 'New data inserted',
-                'work_order' => new WorkOrderResource($workOrder),
-            ]);
+                'message' => 'Work order is being created in the background. You will be notified once it is published.',
+            ], 202);
         } catch (\Exception $error) {
             DB::rollBack();
             Log::error($error);
