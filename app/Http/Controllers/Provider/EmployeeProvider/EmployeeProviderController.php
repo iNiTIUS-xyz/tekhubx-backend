@@ -209,7 +209,7 @@ class EmployeeProviderController extends Controller
 
             $employee = EmployeeProvider::query()
                 ->findOrFail($id);
-            if ($request->type == 'basic') {
+            // if ($request->type == 'basic') {
                 if ($request->role_id) {
                     $role = Role::find($request->role_id);
                 }
@@ -236,7 +236,7 @@ class EmployeeProviderController extends Controller
                         'role' => $role->name
                     ]);
                 }
-            }
+            // }
             // Handle the different request types
             if ($request->type == 'about') {
 
