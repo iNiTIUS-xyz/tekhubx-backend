@@ -177,28 +177,8 @@ class WorkOrderManageController extends Controller
     {
         $rules = [
             'name' => 'nullable|string|max:255',
-            // 'user_name' => "nullable|string|max:255|unique:client_managers,user_name,{$id}|required_without:email",
-            // 'email' => "nullable|string|max:255|unique:client_managers,email,{$id}|required_without:user_name|email",
-            'user_name' => [
-                'nullable',
-                'string',
-                'max:255',
-                'required_without:email',
-                Rule::unique('client_managers')
-                    ->where(function ($query) {
-                        $query->where('client_id', Auth::user()->uuid);
-                    }),
-            ],
-
-            'email' => [
-                'nullable',
-                'email',
-                'required_without:user_name',
-                Rule::unique('client_managers')
-                    ->where(function ($query) {
-                        $query->where('client_id', Auth::user()->uuid);
-                    }),
-            ],
+            'user_name' => "nullable|string|max:255|unique:client_managers,user_name,{$id}|required_without:email",
+            'email' => "nullable|string|max:255|unique:client_managers,email,{$id}|required_without:user_name|email",
             'country_id' => 'nullable|exists:countries,id',
             'state' => 'nullable|string|max:255',
             'zip_code' => 'nullable|string|max:10',
