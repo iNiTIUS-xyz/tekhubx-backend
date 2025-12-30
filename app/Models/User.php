@@ -165,4 +165,9 @@ class User extends Authenticatable implements JWTSubject
         // Relationship to find counter offers associated with this user
         return $this->hasMany(CounterOffer::class, 'user_id', 'id');
     }
+    public function employeeProvider()
+    {
+        // Adjust foreign key if necessary; usually 'user_id' in employee_providers table
+        return $this->hasOne(EmployeeProvider::class, 'user_id');
+    }
 }
