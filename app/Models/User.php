@@ -153,4 +153,16 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Review::class);
     }
+
+    public function sendWorkRequests()
+    {
+        // Relationship to find requests associated with this user
+        return $this->hasMany(SendWorkRequest::class, 'user_id', 'id');
+    }
+
+    public function counterOffers()
+    {
+        // Relationship to find counter offers associated with this user
+        return $this->hasMany(CounterOffer::class, 'user_id', 'id');
+    }
 }

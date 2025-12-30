@@ -16,15 +16,65 @@ use App\Models\WorkOrderChatMessage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\NotificationResource;
+use App\Models\CounterOffer;
+use App\Models\SendWorkRequest;
 
 class ChatMessageController extends Controller
 {
+    // public function messageUserList($work_unique_id)
+    // {
+    //     try {
+    //         $chatUserList = User::query()
+    //             ->whereHas('sentMessages', fn($q) => $q->where('receiver_id', Auth::user()->id)->where('work_order_unique_id', $work_unique_id))
+    //             ->orWhereHas('receivedMessages', fn($q) => $q->where('sender_id', Auth::user()->id)->where('work_order_unique_id', $work_unique_id))
+    //             ->with([
+    //                 'profile',
+    //                 'latestSentMessage' => fn($q) => $q->where('work_order_unique_id', $work_unique_id),
+    //                 'latestReceivedMessage' => fn($q) => $q->where('work_order_unique_id', $work_unique_id),
+    //             ])
+    //             ->get();
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'user_list' => $chatUserList,
+    //         ]);
+    //     } catch (\Exception $e) {
+
+    //         Log::error('Message user list not found: ' . $e->getMessage());
+
+    //         $systemError = ApiResponseHelper::formatErrors(ApiResponseHelper::SYSTEM_ERROR, [ServerErrorMask::UNKNOWN_ERROR]);
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => $systemError,
+    //         ], 500);
+    //     }
+    // }
+
     public function messageUserList($work_unique_id)
     {
         try {
             $chatUserList = User::query()
-                ->whereHas('sentMessages', fn($q) => $q->where('receiver_id', Auth::user()->id)->where('work_order_unique_id', $work_unique_id))
-                ->orWhereHas('receivedMessages', fn($q) => $q->where('sender_id', Auth::user()->id)->where('work_order_unique_id', $work_unique_id))
+                ->where(function ($query) use ($work_unique_id) {
+                    $authUserId = Auth::id();
+
+                    // 1. Users who sent/received messages
+                    $query->whereHas('sentMessages', function ($q) use ($authUserId, $work_unique_id) {
+                        $q->where('receiver_id', $authUserId)->where('work_order_unique_id', $work_unique_id);
+                    })
+                        ->orWhereHas('receivedMessages', function ($q) use ($authUserId, $work_unique_id) {
+                            $q->where('sender_id', $authUserId)->where('work_order_unique_id', $work_unique_id);
+                        })
+
+                        // 2. Users linked via SendWorkRequest
+                        // Assuming the "user_id" in SendWorkRequest is the provider/other party
+                        ->orWhereHas('sendWorkRequests', function ($q) use ($work_unique_id) {
+                            $q->where('work_order_unique_id', $work_unique_id);
+                        })
+
+                        // 3. Users linked via CounterOffer
+                        ->orWhereHas('counterOffers', function ($q) use ($work_unique_id) {
+                            $q->where('work_order_unique_id', $work_unique_id);
+                        });
+                })
                 ->with([
                     'profile',
                     'latestSentMessage' => fn($q) => $q->where('work_order_unique_id', $work_unique_id),
@@ -37,13 +87,10 @@ class ChatMessageController extends Controller
                 'user_list' => $chatUserList,
             ]);
         } catch (\Exception $e) {
-
-            Log::error('Message user list not found: ' . $e->getMessage());
-
-            $systemError = ApiResponseHelper::formatErrors(ApiResponseHelper::SYSTEM_ERROR, [ServerErrorMask::UNKNOWN_ERROR]);
+            Log::error('Message user list error: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => $systemError,
+                'message' => 'An internal error occurred.',
             ], 500);
         }
     }
