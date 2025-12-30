@@ -56,33 +56,36 @@ class ChatMessageController extends Controller
 
             $chatUserList = User::query()
                 ->where(function ($query) use ($authUserId, $work_unique_id) {
-                    // Check for Messages
-                    $query->whereHas('sentMessages', function ($q) use ($authUserId, $work_unique_id) {
-                        $q->where('receiver_id', $authUserId)->where('work_order_unique_id', $work_unique_id);
-                    })
-                        ->orWhereHas('receivedMessages', function ($q) use ($authUserId, $work_unique_id) {
-                            $q->where('sender_id', $authUserId)->where('work_order_unique_id', $work_unique_id);
-                        })
-                        // Check for SendWorkRequests
-                        ->orWhereHas('sendWorkRequests', function ($q) use ($work_unique_id) {
-                            $q->where('work_order_unique_id', $work_unique_id);
-                        })
-                        // Check for CounterOffers
-                        ->orWhereHas('counterOffers', function ($q) use ($work_unique_id) {
-                            $q->where('work_order_unique_id', $work_unique_id);
-                        });
+                    $query->whereHas('sentMessages', fn($q) => $q->where('receiver_id', $authUserId)->where('work_order_unique_id', $work_unique_id))
+                        ->orWhereHas('receivedMessages', fn($q) => $q->where('sender_id', $authUserId)->where('work_order_unique_id', $work_unique_id))
+                        ->orWhereHas('sendWorkRequests', fn($q) => $q->where('work_order_unique_id', $work_unique_id))
+                        ->orWhereHas('counterOffers', fn($q) => $q->where('work_order_unique_id', $work_unique_id));
                 })
                 ->with([
-                    'profile',            // For Admin info
-                    'employeeProvider',   // For Provider info
+                    'profile',
+                    'employeeProvider',
                     'latestSentMessage' => fn($q) => $q->where('work_order_unique_id', $work_unique_id),
                     'latestReceivedMessage' => fn($q) => $q->where('work_order_unique_id', $work_unique_id),
                 ])
                 ->get();
 
-            // Optional: Transform the collection to unify the name/avatar field if needed
+            // Transform the collection to map names to the root level
             $chatUserList->transform(function ($user) {
-                $user->display_info = ($user->role === 'admin') ? $user->profile : $user->employeeProvider;
+                // Determine the source of the info
+                // If role is Provider, take from employeeProvider, otherwise take from profile
+                $infoSource = ($user->organization_role === 'Provider')
+                    ? $user->employeeProvider
+                    : $user->profile;
+
+                // Inject into the root of the user object
+                $user->first_name = $infoSource->first_name ?? null;
+                $user->last_name  = $infoSource->last_name ?? null;
+
+                // Optional: Do the same for profile image if the frontend needs it
+                $user->image = ($user->organization_role === 'Provider')
+                    ? null // Add provider image field if it exists
+                    : ($user->profile->profile_image ?? null);
+
                 return $user;
             });
 
@@ -92,10 +95,7 @@ class ChatMessageController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Chat User List Error: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to retrieve message list.',
-            ], 500);
+            return response()->json(['status' => 'error', 'message' => 'Internal Error'], 500);
         }
     }
     public function fetchMessages(Request $request, $work_unique_id)
