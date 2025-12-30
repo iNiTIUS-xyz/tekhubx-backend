@@ -74,9 +74,9 @@ class ChatMessageController extends Controller
             $chatUserList->transform(function ($user) {
                 // Determine the source of the info
                 // If role is Provider, take from employeeProvider, otherwise take from profile
-                $infoSource = ($user->organization_role === 'Provider')
-                    ? $user->employeeProvider
-                    : $user->profile;
+                // $infoSource = ($user->organization_role === 'Provider')
+                //     ? $user->employeeProvider
+                //     : $user->profile;
 
                 // Inject into the root of the user object
                 $user->first_name = $infoSource->first_name ?? null;
