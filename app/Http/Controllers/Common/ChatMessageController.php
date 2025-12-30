@@ -55,6 +55,7 @@ class ChatMessageController extends Controller
             $authUserId = Auth::id();
 
             $chatUserList = User::query()
+                ->select('id', 'username', 'email', 'organization_role')
                 ->where(function ($query) use ($authUserId, $work_unique_id) {
                     $query->whereHas('sentMessages', fn($q) => $q->where('receiver_id', $authUserId)->where('work_order_unique_id', $work_unique_id))
                         ->orWhereHas('receivedMessages', fn($q) => $q->where('sender_id', $authUserId)->where('work_order_unique_id', $work_unique_id))
@@ -62,8 +63,8 @@ class ChatMessageController extends Controller
                         ->orWhereHas('counterOffers', fn($q) => $q->where('work_order_unique_id', $work_unique_id));
                 })
                 ->with([
-                    'profile',
-                    'employeeProvider',
+                    // 'profile',
+                    // 'employeeProvider',
                     'latestSentMessage' => fn($q) => $q->where('work_order_unique_id', $work_unique_id),
                     'latestReceivedMessage' => fn($q) => $q->where('work_order_unique_id', $work_unique_id),
                 ])
