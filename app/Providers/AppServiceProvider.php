@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Classes\NotificationSentClass;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -12,7 +13,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton('sentNotification', function () {
+            return new NotificationSentClass();
+        });
+
+        $this->app->singleton('CommonService', function () {
+            return new CommonService();
+        });
+
+
     }
 
     /**
