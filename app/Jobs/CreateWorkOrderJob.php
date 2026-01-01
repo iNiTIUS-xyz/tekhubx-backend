@@ -14,11 +14,13 @@ use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Bus\Queueable;
 use App\Models\DocumentLibrary;
+use App\Services\CommonService;
 use App\Models\AdditionalContact;
 use App\Models\AdditionalLocation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Classes\NotificationSentClass;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use App\Services\UniqueIdentifierService;
@@ -38,7 +40,7 @@ class CreateWorkOrderJob implements ShouldQueue
         $this->user = $user;
     }
 
-    public function handle()
+    public function handle(NotificationSentClass $notificationService, CommonService $commonService)
     {
         // Re-attach user to auth for this job context (important in queue)
         Auth::setUser($this->user);
@@ -52,7 +54,7 @@ class CreateWorkOrderJob implements ShouldQueue
 
             $location_id = null;
             if ($request->filled('state_id')) {
-                $location_id = $this->getLocationId($request);
+                $location_id = $this->getLocationId($request, $commonService);
             }
 
             $additionalContactIds = $this->storeAdditionalContacts($request, $uniqueMd5);
@@ -193,7 +195,7 @@ class CreateWorkOrderJob implements ShouldQueue
             ]);
 
             // Send notification (make sure this is queueable or fire-and-forget)
-            app('sentNotification')->providerNotifyWorkOrderCreate($workOrder);
+            $notificationService->providerNotifyWorkOrderCreate($workOrder);
 
             DB::commit();
 
@@ -220,7 +222,7 @@ class CreateWorkOrderJob implements ShouldQueue
 
         return $uniqueMd5;
     }
-    private function getLocationId($request) {
+    private function getLocationId($request, $commonService) {
          $country_name = Country::where('id', $request->country_id)->first();
         $state_name = State::where('id', $request->state_id)->first();
 
@@ -228,7 +230,7 @@ class CreateWorkOrderJob implements ShouldQueue
         $full_address = "{$request->address_line_1}, {$request->city}, {$state_name->name}, {$request->zip_code}, {$country_name->name}";
 
         // Get latitude and longitude using the geocoding function
-        $location = app('CommonService')->geocodeAddressOSM($full_address);
+        $location = $commonService->geocodeAddressOSM($full_address);
 
         if ($location) {
             $latitude = $location['latitude'];
