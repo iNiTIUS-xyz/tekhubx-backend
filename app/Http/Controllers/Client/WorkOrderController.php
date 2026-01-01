@@ -362,6 +362,7 @@ class WorkOrderController extends Controller
             // Dispatch job
             CreateWorkOrderJob::dispatch($request->all(), $user);
 
+            DB::commit();
             // Immediate response
             return response()->json([
                 'status' => 'success',
