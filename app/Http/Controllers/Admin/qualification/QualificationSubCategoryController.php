@@ -137,7 +137,7 @@ class QualificationSubCategoryController extends Controller
             $qualification_sub_category = QualificationSubCategory::find($id);
             $qualification_sub_category->qualification_type_id = $request->qualification_type_id;
             $qualification_sub_category->name = $request->name;
-            $qualification_sub_category->status = $request->status;
+            $qualification_sub_category->status = $request->status ?? $qualification_sub_category->status;
             $qualification_sub_category->save();
             DB::commit();
             return response()->json([
