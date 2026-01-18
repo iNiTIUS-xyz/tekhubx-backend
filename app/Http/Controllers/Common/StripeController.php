@@ -90,7 +90,7 @@ class StripeController extends Controller
             // Generate an account onboarding link
             $link = AccountLink::create([
                 'account' => $account->id,
-                'refresh_url' => env('FRONTEND_URL') . '/stripe-onboarding?type=' . $request->type,
+                'refresh_url' => config('app.frontend_url') . '/stripe-onboarding?type=' . $request->type,
                 // 'return_url' => env('FRONTEND_URL') . '/stripe-connection/callback/' . Auth::user()->id,
                 'return_url' => route('stripe.callback', [
                     'account_id' => $account->id,
