@@ -465,21 +465,35 @@ class SendWorkRequestsController extends Controller
         }
 
         try {
-            if (Auth::user()->organization_role == 'Provider') {
-                $employeeProviders = User::where('uuid', Auth::user()->uuid)
-                    ->orWhere('id', Auth::user()->id)
-                    ->with(['licenseAndCertificates' => function ($query) {
-                        $query->where('status', 'Approved');
-                    }])
-                    ->get();
-            } else {
-                $employeeProviders = EmployeeProvider::where('uuid', Auth::user()->uuid)
-                    ->orWhere('provider_id', Auth::user()->id)
-                    ->with(['licenseCertificate' => function ($query) {
-                        $query->where('status', 'Approved');
-                    }])
+            // if (Auth::user()->organization_role == 'Provider') {
+            //     $employeeProviders = User::where('uuid', Auth::user()->uuid)
+            //         ->orWhere('id', Auth::user()->id)
+            //         ->with(['licenseAndCertificates' => function ($query) {
+            //             $query->where('status', 'Approved');
+            //         }])
+            //         ->get();
+            // } else {
+            //     $employeeProviders = EmployeeProvider::where('uuid', Auth::user()->uuid)
+            //         ->orWhere('provider_id', Auth::user()->id)
+            //         ->with(['licenseCertificate' => function ($query) {
+            //             $query->where('status', 'Approved');
+            //         }])
+            //         ->get();
+            // }
+            $employees = EmployeeProvider::where(function ($q) {
+                $q->where('uuid', Auth::user()->uuid)
+                    ->orWhere('provider_id', Auth::user()->id);
+            })->get();
+
+            $provider = collect();
+
+            if (Auth::user()->organization_role === 'Provider') {
+                $provider = User::where('id', Auth::id())
+                    ->with('licenseAndCertificates')
                     ->get();
             }
+
+            $employeeProviders = $provider->merge($employees);
 
             if ($employeeProviders->isEmpty()) {
                 return response()->json([
@@ -549,14 +563,14 @@ class SendWorkRequestsController extends Controller
                     }
                 }
 
-                if(Auth::user()->organization_role == 'Provider'){
+                if (Auth::user()->organization_role == 'Provider') {
                     $providerResults[] = [
                         'employee_provider' => new UserLicenseResource($employeeProvider),
                         'match_count' => $matchCount,
                         'mismatch_count' => $mismatchCount,
                         'total' => $totalSubCategories,
                     ];
-                }else{
+                } else {
 
                     $providerResults[] = [
                         'employee_provider' => new EmpResourceForLicenceAndCertificate($employeeProvider),
