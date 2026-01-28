@@ -52,13 +52,16 @@ class SubscriptionController extends Controller
         try {
             $subscription = Subscription::find($request->subscription_id);
 
-            $existingTransaction = Payment::where('client_id', Auth::user()->uuid)->where('status', 'Completed')->orderBy('created_at', 'desc')->first();
+            $existingTransaction = Payment::where('client_id', Auth::user()->uuid)
+                ->where('status', 'Completed')
+                ->orderBy('created_at', 'desc')
+                ->first();
             $transaction = new Payment();
-            $transaction->payment_unique_id = UniqueIdentifierService::generateUniqueIdentifier(new Payment(), 'transaction_unique_id', 'uuid');
+            $transaction->payment_unique_id = UniqueIdentifierService::generateUniqueIdentifier(new Payment(), 'payment_unique_id', 'uuid');
             $transaction->client_id = Auth::user()->uuid;
             $transaction->transaction_type = 'Point';
             $transaction->point_credit = $subscription->point;
-            $transaction->point_balance = $existingTransaction->point_balance + $subscription->point;
+            $transaction->point_balance = ($existingTransaction->point_balance ?? 0) + $subscription->point;
             $transaction->description = 'Monthly subscription points request';
             $transaction->status = 'Under Review';
             $transaction->save();
