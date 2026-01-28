@@ -17,4 +17,10 @@ use App\Http\Controllers\Auth\DefaultAuthController;
 
 
 Route::get('stripe-connection/callback', [StripeController::class, 'stripeCallbackTwo'])->name('stripe.callback');
+Route::get('stripe-connection/success/{id}', function ($id) {
+    return redirect(rtrim(env('FRONTEND_URL'), '/') . "/stripe-connection/success/$id");
+});
+Route::get('stripe-connection/failed/{id}', function ($id) {
+    return redirect(rtrim(env('FRONTEND_URL'), '/') . "/stripe-connection/failed/$id");
+});
 Route::get('/verify-email/{token}', [DefaultAuthController::class, 'verifyEmail']);
