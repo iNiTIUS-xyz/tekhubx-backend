@@ -891,7 +891,7 @@ class StripeController extends Controller
 
                     $subscription = Subscription::where('uuid', $payment->client_id)->first();
                     if ($subscription) {
-                        $subscription->status = 'Complete';
+                        $subscription->status = 'Active';
                         $subscription->save();
                     }
                 }
@@ -987,7 +987,7 @@ class StripeController extends Controller
                     if ($subpayment) {
                         // Update the subscription status to "Completed"
                         if ($subscription) {
-                            $subscription->status = 'Complete';
+                            $subscription->status = 'Active';
                             $subscription->save();
                         }
 
@@ -1036,7 +1036,7 @@ class StripeController extends Controller
 
                         $subscription = Subscription::where('uuid', $subpayment->client_id)->first();
                         if ($subscription) {
-                            $subscription->status = 'Complete';
+                            $subscription->status = 'Active';
                             $subscription->save();
                         }
                     }
