@@ -851,27 +851,37 @@ class StripeController extends Controller
 
     public function stripe_success(Request $request)
     {
-        request()->ip() == '127.0.0.1' ? $locationData = Location::get('8.8.4.4') : $locationData = Location::get(request()->ip());
-
         $browserMetadata = [
             'user_agent' => $request->userAgent(),
             'ip_address' => $request->ip(),
         ];
 
-        if (isset($request->session_id)) {
+        if (!isset($request->session_id)) {
+            return redirect(env('FRONTEND_URL') . '/stripe-connection/failed');
+        }
+
+        try {
+            $lookupIp = $request->ip() === '127.0.0.1' ? '8.8.4.4' : $request->ip();
+            $locationData = Location::get($lookupIp);
+            $locationIp = $locationData->ip ?? $request->ip();
 
             $stripe_settings = PaymentSetting::where('gateway_name', 'stripe')->first();
-
             $stripe = new StripeClient($stripe_settings->stripe_secret);
 
             $session_response = $stripe->checkout->sessions->retrieve($request->session_id);
+            $payment_id = $session_response->metadata->payment_id ?? null;
 
-            $payment_id = $session_response->metadata->payment_id;
+            if (!$payment_id) {
+                Log::channel('payment_log')->error('Stripe success missing payment_id metadata', [
+                    'session_id' => $request->session_id,
+                ]);
+                return redirect(env('FRONTEND_URL') . '/stripe-connection/failed');
+            }
 
-            if ($session_response->payment_status == "paid") {
+            if ($session_response->payment_status === "paid") {
                 $payment = Payment::where('payment_unique_id', $payment_id)->first();
                 if ($payment) {
-                    $payment->ip_address = json_encode($locationData->ip);
+                    $payment->ip_address = json_encode($locationIp);
                     $payment->meta_data = json_encode($browserMetadata);
                     $payment->status = 'Completed';
                     if (!empty($session_response->payment_intent)) {
@@ -886,10 +896,14 @@ class StripeController extends Controller
                     }
                 }
                 return redirect(env('FRONTEND_URL') . "/stripe-connection/success/$payment_id");
-            } else {
-                return redirect(env('FRONTEND_URL') . "/stripe-connection/failed/$payment_id");
             }
-        } else {
+
+            return redirect(env('FRONTEND_URL') . "/stripe-connection/failed/$payment_id");
+        } catch (\Exception $e) {
+            Log::channel('payment_log')->error('Stripe success handler failed', [
+                'session_id' => $request->session_id,
+                'error' => $e->getMessage(),
+            ]);
             return redirect(env('FRONTEND_URL') . '/stripe-connection/failed');
         }
     }
