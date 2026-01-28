@@ -825,6 +825,11 @@ class StripeController extends Controller
             'mode' => 'payment',
             'success_url' => route('stripe.success') . '?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => route('stripe.cancel', ['payment_id' => $payment_table->payment_unique_id]),
+            'payment_intent_data' => [
+                'metadata' => [
+                    'payment_id' => $payment_table->payment_unique_id,
+                ],
+            ],
             'metadata' => [
                 'payment_id' => $payment_table->payment_unique_id,
             ],
@@ -865,9 +870,21 @@ class StripeController extends Controller
 
             if ($session_response->payment_status == "paid") {
                 $payment = Payment::where('payment_unique_id', $payment_id)->first();
-                $payment->ip_address = json_encode($locationData->ip);
-                $payment->meta_data = json_encode($browserMetadata);
-                $payment->save();
+                if ($payment) {
+                    $payment->ip_address = json_encode($locationData->ip);
+                    $payment->meta_data = json_encode($browserMetadata);
+                    $payment->status = 'Completed';
+                    if (!empty($session_response->payment_intent)) {
+                        $payment->stripe_payment_intent_id = $session_response->payment_intent;
+                    }
+                    $payment->save();
+
+                    $subscription = Subscription::where('uuid', $payment->client_id)->first();
+                    if ($subscription) {
+                        $subscription->status = 'Completed';
+                        $subscription->save();
+                    }
+                }
                 return redirect(env('FRONTEND_URL') . "/stripe-connection/success/$payment_id");
             } else {
                 return redirect(env('FRONTEND_URL') . "/stripe-connection/failed/$payment_id");
@@ -945,16 +962,20 @@ class StripeController extends Controller
                     $paymentIntent = $event->data->object;
 
                     // Find the subscription and payment associated with this payment intent
-                    $payment_id = $event->data->object->metadata->payment_id;
-                    $subpayment = Payment::where('payment_unique_id', $payment_id)->where('transaction_type', 'Subscription')->first();
-                    $subscription = Subscription::where('uuid', $subpayment->client_id)->first();
+                    $payment_id = $event->data->object->metadata->payment_id ?? null;
+                    $subpayment = $payment_id
+                        ? Payment::where('payment_unique_id', $payment_id)->where('transaction_type', 'Subscription')->first()
+                        : null;
+                    $subscription = $subpayment ? Subscription::where('uuid', $subpayment->client_id)->first() : null;
                     // $subpayment = Payment::where('stripe_payment_intent_id', $paymentIntent->id)->where('transaction_type', 'Subscription')->first();
                     $payment = Payment::where('stripe_payment_intent_id', $paymentIntent->id)->where('transaction_type', 'Payment')->first();
 
                     if ($subpayment) {
                         // Update the subscription status to "Completed"
-                        $subscription->status = 'Completed';
-                        $subscription->save();
+                        if ($subscription) {
+                            $subscription->status = 'Completed';
+                            $subscription->save();
+                        }
 
                         // Update the payment status to "Completed"
                         $subpayment->status = 'Completed';
@@ -977,6 +998,38 @@ class StripeController extends Controller
                         'payment_id' => $payment_id,
                         'subscription_status' => $subscription->status ?? null,
                         'payment_status' => $payment->status ?? null,
+                    ]);
+                    break;
+                case 'checkout.session.completed':
+                    $session = $event->data->object;
+                    $payment_id = $session->metadata->payment_id ?? null;
+                    if (!$payment_id) {
+                        Log::channel('payment_log')->error('Checkout session completed without payment_id metadata', [
+                            'session_id' => $session->id ?? null,
+                        ]);
+                        break;
+                    }
+
+                    $subpayment = Payment::where('payment_unique_id', $payment_id)
+                        ->where('transaction_type', 'Subscription')
+                        ->first();
+                    if ($subpayment) {
+                        $subpayment->status = 'Completed';
+                        if (!empty($session->payment_intent)) {
+                            $subpayment->stripe_payment_intent_id = $session->payment_intent;
+                        }
+                        $subpayment->save();
+
+                        $subscription = Subscription::where('uuid', $subpayment->client_id)->first();
+                        if ($subscription) {
+                            $subscription->status = 'Completed';
+                            $subscription->save();
+                        }
+                    }
+
+                    Log::channel('payment_log')->info('Checkout session completed', [
+                        'payment_id' => $payment_id,
+                        'session_id' => $session->id ?? null,
                     ]);
                     break;
                 case 'payout.paid':
