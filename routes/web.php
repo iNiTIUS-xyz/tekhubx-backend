@@ -15,6 +15,12 @@ use App\Http\Controllers\Auth\DefaultAuthController;
 |
 */
 
+Route::get('/', function () {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Project is up and running',
+    ]);
+});
 
 Route::get('stripe-connection/callback', [StripeController::class, 'stripeCallbackTwo'])->name('stripe.callback');
 Route::get('stripe-connection/success/{id}', function ($id) {
