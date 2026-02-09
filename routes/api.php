@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\LegalController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Client\TalentController;
 use App\Http\Controllers\Common\CommonController;
 use App\Http\Controllers\Common\ReportController;
@@ -263,6 +264,10 @@ Route::group(['middleware' => 'auth.admin'], function () {
     Route::get('admin/payment-settings/{id}', [PaymentSettingController::class, 'show']);
     Route::post('admin/payment-settings', [PaymentSettingController::class, 'store']);
     Route::post('admin/payment-settings', [PaymentSettingController::class, 'update']);
+    // contact setting
+    Route::get('admin/settings', [SettingController::class, 'index']);
+    Route::get('admin/settings/{id}', [SettingController::class, 'edit']);
+    Route::post('admin/settings', [SettingController::class, 'update']);
 });
 
 //Client

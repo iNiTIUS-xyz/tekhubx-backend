@@ -94,7 +94,6 @@ class AdminAuthController extends Controller
                 ], 200);
             }
         } catch (\Exception $e) {
-
             Log::error('User Login failed: ' . $e->getMessage());
 
             $systemError = ApiResponseHelper::formatErrors(ApiResponseHelper::SYSTEM_ERROR, ['User Login failed!']);
