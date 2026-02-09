@@ -10,9 +10,6 @@ use Illuminate\Support\Facades\Validator;
 
 class SocialMediaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $link = SocialMediaLink::all();
@@ -23,9 +20,6 @@ class SocialMediaController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $rules = [
@@ -44,6 +38,7 @@ class SocialMediaController extends Controller
 
         $link = new SocialMediaLink();
         $link->platform = $request->platform;
+        $link->platform_icon = $request->platform_icon;
         $link->url = $request->url;
         $link->save();
 
@@ -54,9 +49,6 @@ class SocialMediaController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $link = SocialMediaLink::findOrFail($id);
@@ -66,9 +58,6 @@ class SocialMediaController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $request->validate([
@@ -76,6 +65,8 @@ class SocialMediaController extends Controller
         ]);
 
         $link = SocialMediaLink::findOrFail($id);
+        $link->platform = $request->platform;
+        $link->platform_icon = $request->platform_icon;
         $link->url = $request->url;
         $link->save();
 
@@ -86,9 +77,6 @@ class SocialMediaController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
 
