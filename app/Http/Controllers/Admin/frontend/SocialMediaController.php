@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin\frontend;
 
 use Illuminate\Http\Request;
+use App\Utils\ServerErrorMask;
 use App\Models\SocialMediaLink;
 use App\Helpers\ApiResponseHelper;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 
@@ -23,7 +25,9 @@ class SocialMediaController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'platform' => 'required|in:facebook,twitter,linkedin,youtube',
+            // 'platform' => 'required|in:facebook,twitter,linkedin,youtube',
+            'platform' => 'required',
+            'platform_icon' => 'required',
             'url' => 'required|url'
         ];
 
@@ -58,11 +62,22 @@ class SocialMediaController extends Controller
         ]);
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        $request->validate([
+        $rules = [
+            'platform' => 'required',
+            'platform_icon' => 'required',
             'url' => 'required|url'
-        ]);
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            $formattedErrors = ApiResponseHelper::formatErrors(ApiResponseHelper::VALIDATION_ERROR, $validator->errors()->toArray());
+            return response()->json([
+                'errors' => $formattedErrors,
+            ], 422);
+        }
 
         $link = SocialMediaLink::findOrFail($id);
         $link->platform = $request->platform;
@@ -80,12 +95,35 @@ class SocialMediaController extends Controller
     public function destroy(string $id)
     {
 
-        $link = SocialMediaLink::findOrFail($id);
-        $link->delete();
+        try {
+            DB::beginTransaction();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Social media link deleted successfully.'
-        ]);
+            $link = SocialMediaLink::find($id);
+
+            if (!$link) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Social media link not found.'
+                ]);
+            }
+
+            $link->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Social media link deleted successfully.'
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollback();
+
+            $formattedErrors = ApiResponseHelper::formatErrors(ApiResponseHelper::SYSTEM_ERROR, [ServerErrorMask::SERVER_ERROR]);
+
+            return response()->json([
+                'errors' => $formattedErrors,
+                'payload' => null,
+            ], 500);
+        }
     }
 }

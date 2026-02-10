@@ -257,7 +257,7 @@ Route::group(['middleware' => 'auth.admin'], function () {
     Route::get('all-social-media', [SocialMediaController::class, 'index'])->name('social-media.index');
     Route::post('/social-media', [SocialMediaController::class, 'store'])->name('social-media.store');
     Route::get('/social-media/{id}', [SocialMediaController::class, 'show'])->name('social-media.show');
-    Route::put('/social-media/{id}', [SocialMediaController::class, 'update'])->name('social-media.update');
+    Route::post('/social-media/{id}', [SocialMediaController::class, 'update'])->name('social-media.update');
     Route::delete('/social-media/{id}', [SocialMediaController::class, 'destroy'])->name('social-media.destroy');
 
     Route::get('admin/payment-settings', [PaymentSettingController::class, 'index']);
