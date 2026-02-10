@@ -65,7 +65,7 @@ class ClientController extends Controller
             'location_type' => 'nullable|string|max:255',
             'company_name_with_logo' => 'nullable',
             'client_name_with_logo' => 'nullable',
-            'logo' => 'nullable|mimes:jpeg,png,jpg,gif,avif,svg,webp|max:2048',
+            'logo' => 'nullable|mimes:jpeg,png,jpg,gif,avif,svg,webp|max:10240',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -171,7 +171,7 @@ class ClientController extends Controller
             'location_type' => 'nullable|string|max:255',
             'company_name_with_logo' => 'nullable',
             'client_name_with_logo' => 'nullable',
-            'logo' => 'nullable|mimes:jpeg,png,jpg,gif,avif,svg,webp|max:2048',
+            'logo' => 'nullable|mimes:jpeg,png,jpg,gif,avif,svg,webp|max:10240',
         ];
 
         $validator = Validator::make($request->all(), $rules);

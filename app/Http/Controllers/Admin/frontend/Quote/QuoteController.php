@@ -45,7 +45,7 @@ class QuoteController extends Controller
     {
         $rules = [
             'quote' => 'required',
-            'image' => 'required|mimes:png,jpg,jpeg|max:5120',
+            'image' => 'required|mimes:png,jpg,jpeg|max:10240',
             'quote_author_name' => 'required',
             'status' => 'nullable|in:Active,Inactive',
         ];
@@ -113,7 +113,7 @@ class QuoteController extends Controller
     {
         $rules = [
             'quote' => 'required',
-            'image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'quote_author_name' => 'required',
             'status' => 'nullable|in:Active,Inactive',
         ];

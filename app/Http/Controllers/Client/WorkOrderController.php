@@ -136,7 +136,7 @@ class WorkOrderController extends Controller
             'work_order_manager_id' => 'nullable|integer',
             'additional_contact_info' => 'nullable|array',
             'new_documents_file' => 'nullable|array',
-            'new_documents_file.*.documents_file' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:5120',
+            'new_documents_file.*.documents_file' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:10240',
             'old_documents_id' => 'nullable',
             'tasks' => 'required|array',
             'buyer_custom_field' => 'nullable|string',
@@ -2230,7 +2230,7 @@ class WorkOrderController extends Controller
     {
         $rules = [
             'files' => 'required|array|min:1', // Validate an array of files
-            'files.*' => 'file|mimes:jpg,jpeg,png,heic,pdf,doc,docx|max:5120', // 5MB max size
+            'files.*' => 'file|mimes:jpg,jpeg,png,heic,pdf,doc,docx|max:10240', // 5MB max size
             'description' => 'required|string|min:10',
         ];
 

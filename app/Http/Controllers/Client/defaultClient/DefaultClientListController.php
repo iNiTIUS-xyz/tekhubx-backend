@@ -61,7 +61,7 @@ class DefaultClientListController extends Controller
             'state_id' => 'required|exists:states,id',
             'country_id' => 'required|exists:countries,id',
             'location_type' => 'nullable|in:Commercial,Government,Residential,Educational,Other',
-            'logo' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'logo' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'company_name_logo' => 'nullable',
             'client_name_logo' => 'nullable',
         ];
@@ -172,7 +172,7 @@ class DefaultClientListController extends Controller
             'state_id' => 'nullable|exists:states,id',
             'country_id' => 'nullable|exists:countries,id',
             'location_type' => 'nullable|in:Commercial,Government,Residential,Educational,Other',
-            'logo' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'logo' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'company_name_logo' => 'nullable',
             'client_name_logo' => 'nullable',
             'status' => 'nullable|in:Active,Hidden',

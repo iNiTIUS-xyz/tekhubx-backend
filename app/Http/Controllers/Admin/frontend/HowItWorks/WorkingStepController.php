@@ -52,7 +52,7 @@ class WorkingStepController extends Controller
             'step_count' => 'required|integer|min:1',
             'step_title' => 'required|string|max:255',
             'step_description' => 'nullable|string',
-            'step_image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'step_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -140,7 +140,7 @@ class WorkingStepController extends Controller
             'step_count' => 'required|integer|min:1',
             'step_title' => 'required|string|max:255',
             'step_description' => 'nullable|string',
-            'step_image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'step_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
         ];
 
         $validator = Validator::make($request->all(), $rules);

@@ -46,7 +46,7 @@ class PageController extends Controller
             'page_title' => 'required',
             'short_description' => 'required',
             'description' => 'required',
-            'banner_image' => 'required|mimes:png,jpg,jpeg|max:5120',
+            'banner_image' => 'required|mimes:png,jpg,jpeg|max:10240',
             'status' => 'nullable|in:Active,Inactive',
         ];
 
@@ -133,8 +133,7 @@ class PageController extends Controller
             'page_title' => 'required',
             'short_description' => 'required',
             'description' => 'required',
-            'banner_image' => 'nullable
-            |mimes:png,jpg,jpeg|max:5120',
+            'banner_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'status' => 'nullable|in:Active,Inactive',
         ];
 

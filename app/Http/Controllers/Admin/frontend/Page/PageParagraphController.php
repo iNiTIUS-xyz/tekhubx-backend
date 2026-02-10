@@ -43,15 +43,15 @@ class PageParagraphController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'paragraph_one_image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'paragraph_one_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'paragraph_one_title' => 'nullable|string|max:255',
             'paragraph_one_description' => 'nullable|string',
 
-            'paragraph_two_image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'paragraph_two_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'paragraph_two_title' => 'nullable|string|max:255',
             'paragraph_two_description' => 'nullable|string',
 
-            'paragraph_three_image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'paragraph_three_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'paragraph_three_title' => 'nullable|string|max:255',
             'paragraph_three_description' => 'nullable|string',
         ];
@@ -137,15 +137,15 @@ class PageParagraphController extends Controller
     public function update(Request $request, $id)
     {
         $rules = [
-            'paragraph_one_image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'paragraph_one_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'paragraph_one_title' => 'nullable|string|max:255',
             'paragraph_one_description' => 'nullable|string',
 
-            'paragraph_two_image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'paragraph_two_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'paragraph_two_title' => 'nullable|string|max:255',
             'paragraph_two_description' => 'nullable|string',
 
-            'paragraph_three_image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'paragraph_three_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'paragraph_three_title' => 'nullable|string|max:255',
             'paragraph_three_description' => 'nullable|string',
         ];

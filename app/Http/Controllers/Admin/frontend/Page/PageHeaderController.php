@@ -84,7 +84,7 @@ class PageHeaderController extends Controller
             'title' => 'nullable|string|max:255',
             'short_description' => 'nullable|string|max:500',
             'description' => 'nullable|string',
-            'image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'meta_keywords' => 'nullable|string|max:500',
         ];
 
@@ -172,7 +172,7 @@ class PageHeaderController extends Controller
     //         'title' => 'required|string|max:255',
     //         'short_description' => 'nullable|string|max:500',
     //         'description' => 'nullable|string',
-    //         'image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+    //         'image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
     //         'meta_keywords' => 'nullable|string|max:500',
     //     ];
 
@@ -268,7 +268,7 @@ class PageHeaderController extends Controller
             'title' => 'nullable|string|max:255',
             'short_description' => 'nullable|string|max:500',
             'description' => 'nullable|string',
-            'image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'meta_keywords' => 'nullable|string|max:500',
         ];
 

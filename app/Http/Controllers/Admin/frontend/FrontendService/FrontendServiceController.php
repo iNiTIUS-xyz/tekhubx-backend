@@ -48,7 +48,7 @@ class FrontendServiceController extends Controller
         $rules = [
             'title' => 'required',
             'frontend_service_category_id' => 'required|exists:frontend_service_categories,id',
-            'banner_image' => 'required|mimes:png,jpg,jpeg',
+            'banner_image' => 'required|mimes:png,jpg,jpeg|max:10240',
             'short_description' => 'required|max:180',
             'description' => 'required|string',
             'status' => 'nullable|in:Active,Inactive',
@@ -124,7 +124,7 @@ class FrontendServiceController extends Controller
         $rules = [
             'title' => 'nullable',
             'frontend_service_category_id' => 'nullable|exists:frontend_service_categories,id',
-            'banner_image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'banner_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'short_description' => 'nullable|max:180',
             'description' => 'nullable|string',
             'status' => 'nullable|in:Active,Inactive',

@@ -45,7 +45,7 @@ class TeamController extends Controller
     {
         $rules = [
             'name' => 'required',
-            'image' => 'required|mimes:png,jpg,jpeg|max:5120',
+            'image' => 'required|mimes:png,jpg,jpeg|max:10240',
             'designation' => 'required',
             'portfolio_url' => 'required',
             'linkedin_url' => 'required',
@@ -127,7 +127,7 @@ class TeamController extends Controller
     {
         $rules = [
             'name' => 'required',
-            'image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'designation' => 'required',
             'portfolio_url' => 'required',
             'linkedin_url' => 'required',

@@ -268,7 +268,7 @@ class AdminAuthController extends Controller
             'phone' => 'required',
             'about' => 'required',
             'address' => 'required',
-            'profile_image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'profile_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
         ];
 
         $validator = Validator::make($request->all(), $rules);

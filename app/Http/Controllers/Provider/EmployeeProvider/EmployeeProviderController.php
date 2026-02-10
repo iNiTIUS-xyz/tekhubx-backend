@@ -210,32 +210,32 @@ class EmployeeProviderController extends Controller
             $employee = EmployeeProvider::query()
                 ->findOrFail($id);
             // if ($request->type == 'basic') {
-                if ($request->role_id) {
-                    $role = Role::find($request->role_id);
-                }
-                $employee->first_name = $request->first_name ?? $employee->first_name;
-                $employee->last_name = $request->last_name ?? $employee->last_name;
-                $employee->email = $request->email ?? $employee->email;
-                $employee->phone = $request->phone ?? $employee->phone;
-                $employee->address_line_1 = $request->address_line_1 ?? $employee->address_line_1;
-                $employee->address_line_2 = $request->address_line_2 ?? $employee->address_line_2;
-                $employee->city = $request->city ?? $employee->city;
-                $employee->state_id = $request->state_id ?? $employee->state_id;
-                $employee->zip_code = $request->zip_code ?? $employee->zip_code;
-                $employee->country_id = $request->country_id ?? $employee->country_id;
-                $employee->work_category_id = $request->work_category_id ?? $employee->work_category_id;
-                $employee->bio = $request->bio ?? $employee->bio;
-                $employee->status = $request->status ?? $employee->status;
-                $employee->role = $role->name ?? $employee->role;
-                $employee->save();
+            if ($request->role_id) {
+                $role = Role::find($request->role_id);
+            }
+            $employee->first_name = $request->first_name ?? $employee->first_name;
+            $employee->last_name = $request->last_name ?? $employee->last_name;
+            $employee->email = $request->email ?? $employee->email;
+            $employee->phone = $request->phone ?? $employee->phone;
+            $employee->address_line_1 = $request->address_line_1 ?? $employee->address_line_1;
+            $employee->address_line_2 = $request->address_line_2 ?? $employee->address_line_2;
+            $employee->city = $request->city ?? $employee->city;
+            $employee->state_id = $request->state_id ?? $employee->state_id;
+            $employee->zip_code = $request->zip_code ?? $employee->zip_code;
+            $employee->country_id = $request->country_id ?? $employee->country_id;
+            $employee->work_category_id = $request->work_category_id ?? $employee->work_category_id;
+            $employee->bio = $request->bio ?? $employee->bio;
+            $employee->status = $request->status ?? $employee->status;
+            $employee->role = $role->name ?? $employee->role;
+            $employee->save();
 
-                if (!empty($request->role_id)) {
-                    $user = User::find($employee->provider_id);
-                    $user->update([
-                        'role_id' => $request->role_id,
-                        'role' => $role->name
-                    ]);
-                }
+            if (!empty($request->role_id)) {
+                $user = User::find($employee->provider_id);
+                $user->update([
+                    'role_id' => $request->role_id,
+                    'role' => $role->name
+                ]);
+            }
             // }
             // Handle the different request types
             if ($request->type == 'about') {

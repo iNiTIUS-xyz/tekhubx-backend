@@ -45,7 +45,7 @@ class FrontendServiceCategoryController extends Controller
     {
         $rules = [
             'name' => 'required|unique:frontend_service_categories,name',
-            'image' => 'required|mimes:png,jpg,jpeg|max:5120',
+            'image' => 'required|mimes:png,jpg,jpeg|max:10240',
             'header_title' => 'required',
             'sub_header' => 'required',
             'description' => 'required',
@@ -118,7 +118,7 @@ class FrontendServiceCategoryController extends Controller
     {
         $rules = [
             'name' => 'nullable|unique:frontend_service_categories,name,' . $id,
-            'image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'header_title' => 'nullable',
             'sub_header' => 'nullable',
             'description' => 'nullable',

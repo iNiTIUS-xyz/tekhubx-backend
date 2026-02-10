@@ -49,7 +49,7 @@ class DocumentationController extends Controller
             'title' => 'required|string|max:255',
             'icon' => 'required',
             'description' => 'required',
-            'image' => 'required|mimes:png,jpg,jpeg|max:5120',
+            'image' => 'required|mimes:png,jpg,jpeg|max:10240',
             'status' => 'required|in:Active,Inactive',
         ];
 
@@ -141,7 +141,7 @@ class DocumentationController extends Controller
             'title' => 'required|string|max:255',
             'icon' => 'required',
             'description' => 'required',
-            'image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'status' => 'required|in:Active,Inactive',
         ];
 

@@ -146,7 +146,7 @@ class CommonController extends Controller
         $rules = [
             'company_name' => 'required',
             'company_bio' => 'nullable',
-            'logo' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'logo' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'about_us' => 'nullable',
             'types_of_work' => 'nullable',
             'skill_sets' => 'nullable',
@@ -445,7 +445,7 @@ class CommonController extends Controller
                     'social_security_number' => 'nullable',
                     'company_address' => 'nullable',
                     'company_website' => 'nullable',
-                    'profile_image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+                    'profile_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
                 ];
             case 'work_summery':
                 return [

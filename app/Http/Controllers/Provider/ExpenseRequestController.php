@@ -62,7 +62,7 @@ class ExpenseRequestController extends Controller
             'expense_requests.*.expense_category_id' => 'required|exists:expense_categories,id',
             'expense_requests.*.amount' => 'required|numeric|min:0',
             'expense_requests.*.description' => 'required|string',
-            'expense_requests.*.file' => 'nullable|file|mimes:jpg,jpeg,png,heic,pdf,doc,docx|max:5120',
+            'expense_requests.*.file' => 'nullable|file|mimes:jpg,jpeg,png,heic,pdf,doc,docx|max:10240',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -200,7 +200,7 @@ class ExpenseRequestController extends Controller
             'expense_category_id' => 'required|exists:expense_categories,id',
             'amount' => 'required|numeric|min:0',
             'description' => 'required|string',
-            'file' => 'nullable|file|mimes:jpg,jpeg,png,heic,pdf,doc,docx|max:5120',
+            'file' => 'nullable|file|mimes:jpg,jpeg,png,heic,pdf,doc,docx|max:10240',
         ];
 
         $validator = Validator::make($request->all(), $rules);

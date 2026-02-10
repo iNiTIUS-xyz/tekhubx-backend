@@ -48,7 +48,7 @@ class TestimonialController extends Controller
             'author_name' => 'required',
             'designation' => 'required',
             'quote' => 'required',
-            'image' => 'required|mimes:png,jpg,jpeg|max:5120',
+            'image' => 'required|mimes:png,jpg,jpeg|max:10240',
             'review_star' => 'nullable|in:1,2,3,4,5',
             'status' => 'nullable|in:Active,Inactive',
         ];
@@ -125,7 +125,7 @@ class TestimonialController extends Controller
             'author_name' => 'required',
             'designation' => 'required',
             'quote' => 'required',
-            'image' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'review_star' => 'nullable|in:1,2,3,4,5',
             'status' => 'nullable|in:Active,Inactive',
         ];

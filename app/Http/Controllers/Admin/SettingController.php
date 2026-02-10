@@ -75,8 +75,8 @@ class SettingController extends Controller
     {
         $rules = [
             'website_name' => 'required',
-            'website_logo' => 'nullable|mimes:png,jpg,jpeg|max:5120',
-            'website_favicon' => 'nullable|mimes:png,jpg,jpeg|max:5120',
+            'website_logo' => 'nullable|mimes:png,jpg,jpeg|max:10240',
+            'website_favicon' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'phone_numbers' => 'nullable|array|min:1',
             'email_addresses' => 'nullable|array|min:1',
             'address' => 'nullable|string',
