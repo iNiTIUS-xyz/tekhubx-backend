@@ -41,7 +41,7 @@ class CategoryController extends Controller
     {
 
         $rules = [
-            'name' => 'required',
+            'name' => 'required|min:3|max:30',
             'status' => 'nullable|in:Active,Inactive',
         ];
 
@@ -116,7 +116,7 @@ class CategoryController extends Controller
     {
 
         $rules = [
-            'name' => 'required',
+            'name' => 'required|min:3|max:30',
             'status' => 'nullable|in:Active,Inactive',
         ];
 
