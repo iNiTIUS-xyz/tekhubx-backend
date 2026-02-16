@@ -9,5 +9,5 @@ class SocialMediaLink extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['platform', 'url'];
+    protected $fillable = ['platform', 'platform_icon', 'url'];
 }
