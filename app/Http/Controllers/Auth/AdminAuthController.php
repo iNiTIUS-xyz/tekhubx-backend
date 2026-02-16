@@ -331,7 +331,7 @@ class AdminAuthController extends Controller
     {
         $rules = [
             'oldpassword' => 'required',
-            'password' => 'required',
+            'password' => 'required|confirmed',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -350,9 +350,9 @@ class AdminAuthController extends Controller
             $user = User::query()
                 ->findOrFail(Auth::user()->id);
 
-            if (!Hash::check($request->oldpassword, $user->password)) {
+            if ($user && !Hash::check($request->oldpassword, $user->password)) {
                 return response()->json([
-                    'status' => 'success',
+                    'status' => 'error',
                     'message' => 'Old Password Dose Not Match',
                 ]);
             }
