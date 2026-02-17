@@ -226,18 +226,20 @@ class CreateWorkOrderJob implements ShouldQueue
          $country_name = Country::where('id', $request->country_id)->first();
         $state_name = State::where('id', $request->state_id)->first();
 
-        // Construct the full address
-        $full_address = "{$request->address_line_1}, {$request->city}, {$state_name->name}, {$request->zip_code}, {$country_name->name}";
-
-        // Get latitude and longitude using the geocoding function
-        $location = $commonService->geocodeAddressOSM($full_address);
-
-        if ($location) {
-            $latitude = $location['latitude'];
-            $longitude = $location['longitude'];
+        if ($request->filled('latitude') && $request->filled('longitude')) {
+            $latitude = $request->latitude;
+            $longitude = $request->longitude;
         } else {
-            $latitude = null;
-            $longitude = null;
+            $full_address = "{$request->address_line_1}, {$request->city}, {$state_name->name}, {$request->zip_code}, {$country_name->name}";
+            $location = $commonService->geocodeAddressOSM($full_address);
+
+            if ($location) {
+                $latitude = $location['latitude'];
+                $longitude = $location['longitude'];
+            } else {
+                $latitude = null;
+                $longitude = null;
+            }
         }
 
         $existsingLocation = AdditionalLocation::where('uuid', Auth::user()->uuid)

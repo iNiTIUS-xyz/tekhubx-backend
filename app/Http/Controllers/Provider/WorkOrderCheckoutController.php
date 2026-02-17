@@ -445,6 +445,39 @@ class WorkOrderCheckoutController extends Controller
             }
             $workOrder = WorkOrder::where('work_order_unique_id', $work_order_unique_id)->first();
 
+            if ($provider_checkout->on_my_way !== 'yes') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You must mark "On My Way" before check-in.',
+                ], 400);
+            }
+
+            if ($workOrder->location_id !== "remote") {
+                $additional_locations = AdditionalLocation::find($workOrder->location_id);
+                if (!$additional_locations || !$additional_locations->latitude || !$additional_locations->longitude) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Work order site coordinates are not configured.',
+                    ], 422);
+                }
+
+                $distanceToSite = $this->calculateDistance(
+                    $additional_locations->latitude,
+                    $additional_locations->longitude,
+                    $request->latitude,
+                    $request->longitude
+                );
+                $checkInRadiusKm = 2;
+
+                if ($distanceToSite > $checkInRadiusKm) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Check-in is allowed only within 2 km of the work order location.',
+                        'distance_km' => round($distanceToSite, 3),
+                    ], 422);
+                }
+            }
+
             $tasks = json_decode($workOrder->tasks, true);
             $notificationEmails = collect($tasks)
                 ->firstWhere('name', 'Check in')['notification_email'] ?? [];
@@ -493,6 +526,18 @@ class WorkOrderCheckoutController extends Controller
                 'status' => $status
             ]);
 
+            LiveTracking::create([
+                'work_order_unique_id' => $work_order_unique_id,
+                'provider_id' => Auth::id(),
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'speed' => $request->speed ?? 0,
+                'heading' => $request->heading ?? 0,
+                'accuracy' => $request->accuracy,
+                'status' => 'check_in',
+                'tracked_at' => Carbon::parse($request->check_in_time),
+            ]);
+
             $history = new HistoryLog();
             $history->provider_id = Auth::user()->id;
             $history->work_order_unique_id = $work_order_unique_id;
@@ -506,15 +551,19 @@ class WorkOrderCheckoutController extends Controller
                 DB::commit();
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'Work Order location is remote.'
+                    'message' => 'Check-in saved for remote work order.'
                 ]);
             } else {
                 $additional_locations = AdditionalLocation::find($workOrder->location_id);
                 $distance = $this->calculateDistance($additional_locations->latitude, $additional_locations->longitude, $request->latitude, $request->longitude);
+                $checkInRadiusKm = 2;
                 DB::commit();
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'You are more than 1 mile away from the work order location.'
+                    'message' => $distance <= $checkInRadiusKm
+                        ? 'Check-in saved. You are within 2 km of the work order location.'
+                        : 'Check-in saved.',
+                    'distance_km' => round($distance, 3),
                 ]);
             }
         } catch (\Exception $e) {
@@ -559,6 +608,7 @@ class WorkOrderCheckoutController extends Controller
             'speed' => 'nullable|numeric',
             'heading' => 'nullable|numeric',
             'accuracy' => 'nullable|numeric',
+            'status' => 'nullable|in:on_my_way,on_site,check_in,check_out',
         ]);
 
         $trackedAt = $request->timestamp ? new \DateTime($request->timestamp) : now();
@@ -571,7 +621,7 @@ class WorkOrderCheckoutController extends Controller
             'speed' => $request->speed ?? 0,
             'heading' => $request->heading ?? 0,
             'accuracy' => $request->accuracy,
-            'status' => 'on_my_way',
+            'status' => $request->status ?? 'on_site',
             'tracked_at' => $trackedAt,
         ]);
 
@@ -604,7 +654,11 @@ class WorkOrderCheckoutController extends Controller
             $isAuthorized = true;
         }
 
-        if ($user->organization_role === 'provider' && $workOrder->assigned_id == $user->id) {
+        if (in_array($user->organization_role, ['Provider', 'Provider Company']) && $workOrder->assigned_id == $user->id) {
+            $isAuthorized = true;
+        }
+
+        if ($user->role === 'Super Admin' || $user->organization_role === 'Main') {
             $isAuthorized = true;
         }
 
@@ -630,8 +684,8 @@ class WorkOrderCheckoutController extends Controller
             'status' => 'success',
             'location' => $location,
             'provider' => [
-                'id' => $workOrder->provider_id,
-                'name' => $workOrder->provider->name,
+                'id' => $workOrder->assigned_id,
+                'name' => optional($workOrder->provider)->name,
             ],
             'work_order' => [
                 'id' => $workOrder->id,
@@ -660,7 +714,11 @@ class WorkOrderCheckoutController extends Controller
             $isAuthorized = true;
         }
 
-        if ($user->organization_role === 'provider' && $workOrder->assigned_id == $user->id) {
+        if (in_array($user->organization_role, ['Provider', 'Provider Company']) && $workOrder->assigned_id == $user->id) {
+            $isAuthorized = true;
+        }
+
+        if ($user->role === 'Super Admin' || $user->organization_role === 'Main') {
             $isAuthorized = true;
         }
 

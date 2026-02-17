@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\State;
 use App\Models\Review;
@@ -14,6 +15,7 @@ use App\Models\Shipment;
 use App\Models\PayChange;
 use App\Models\WorkOrder;
 use App\Models\HistoryLog;
+use App\Models\LiveTracking;
 use App\Models\ServiceFees;
 use App\Models\CounterOffer;
 use App\Models\Subscription;
@@ -120,6 +122,8 @@ class WorkOrderController extends Controller
             'city' => 'nullable',
             'state_id' => 'nullable|integer|exists:states,id',
             'zip_code' => 'nullable',
+            'latitude' => 'nullable|numeric|required_with:longitude',
+            'longitude' => 'nullable|numeric|required_with:latitude',
             'save_name' => 'nullable',
             'save_location_id' => 'nullable|integer|exists:additional_locations,id',
             'remote' => 'nullable',
@@ -2234,6 +2238,9 @@ class WorkOrderController extends Controller
             'files' => 'required|array|min:1', // Validate an array of files
             'files.*' => 'file|mimes:jpg,jpeg,png,heic,pdf,doc,docx|max:10240', // 5MB max size
             'description' => 'required|string|min:10',
+            'latitude' => 'nullable|numeric|required_with:longitude',
+            'longitude' => 'nullable|numeric|required_with:latitude',
+            'checkout_time' => 'nullable|date',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -2274,6 +2281,20 @@ class WorkOrderController extends Controller
             'provider_status' => 'Completed',
         ]);
         $provider_checkout->update(['is_check_out' => 'yes']);
+
+        if ($request->filled('latitude') && $request->filled('longitude')) {
+            LiveTracking::create([
+                'work_order_unique_id' => $work_order_unique_id,
+                'provider_id' => Auth::id(),
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'speed' => 0,
+                'heading' => 0,
+                'accuracy' => null,
+                'status' => 'check_out',
+                'tracked_at' => $request->checkout_time ? Carbon::parse($request->checkout_time) : now(),
+            ]);
+        }
 
         $tasks = json_decode($work_order->tasks, true);
         $notificationEmails = collect($tasks)

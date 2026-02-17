@@ -93,4 +93,46 @@ class UserService
 
         return null; // Handle error or invalid address
     }
+
+    public function reverseGeocodeOSM($latitude, $longitude)
+    {
+        $url = "https://nominatim.openstreetmap.org/reverse?lat=" . urlencode($latitude) . "&lon=" . urlencode($longitude) . "&format=json&addressdetails=1";
+
+        $opts = [
+            "http" => [
+                "header" => "User-Agent: MyLaravelApp/1.0 (https://example.com)\r\n"
+            ]
+        ];
+        $context = stream_context_create($opts);
+
+        $response = @file_get_contents($url, false, $context);
+        if ($response === false) {
+            return null;
+        }
+
+        $data = json_decode($response, true);
+        if (empty($data) || empty($data['address'])) {
+            return null;
+        }
+
+        $address = $data['address'];
+
+        return [
+            'display_name' => $data['display_name'] ?? null,
+            'address_line_1' => trim(
+                implode(' ', array_filter([
+                    $address['house_number'] ?? null,
+                    $address['road'] ?? ($address['pedestrian'] ?? ($address['path'] ?? null)),
+                ]))
+            ),
+            'city' => $address['city'] ?? ($address['town'] ?? ($address['village'] ?? ($address['hamlet'] ?? null))),
+            'state' => $address['state'] ?? null,
+            'state_code' => isset($address['ISO3166-2-lvl4']) ? substr($address['ISO3166-2-lvl4'], -2) : null,
+            'country' => $address['country'] ?? null,
+            'country_code' => isset($address['country_code']) ? strtoupper($address['country_code']) : null,
+            'postcode' => $address['postcode'] ?? null,
+            'latitude' => $data['lat'] ?? $latitude,
+            'longitude' => $data['lon'] ?? $longitude,
+        ];
+    }
 }

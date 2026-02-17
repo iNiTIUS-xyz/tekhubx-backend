@@ -423,6 +423,7 @@ Route::group(['middleware' => ['check.user.guard']], function () {
     Route::get('providers/{id}/details', [EmployeeProviderController::class, 'providersDetails']);
     //get country details
     Route::get('country-list', [CommonController::class, 'country_data']);
+    Route::post('reverse-geocode', [CommonController::class, 'reverseGeocode']);
     Route::post('company-update', [CommonController::class, 'companyUpdate']);
     Route::post('profile/update', [CommonController::class, 'updateUserProfile']);
     Route::post('check-username-exists', [CommonController::class, 'checkUsername']);

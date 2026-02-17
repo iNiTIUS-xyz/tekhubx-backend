@@ -30,10 +30,10 @@ class WorkOrderResource extends JsonResource
     {
 
         // Decode the JSON fields
-        $shipmentIds = json_decode($this->shipment_id, true);
-        $additionalContactIds = json_decode($this->additional_contact_id, true);
+        $shipmentIds = json_decode($this->shipment_id, true) ?: [];
+        $additionalContactIds = json_decode($this->additional_contact_id, true) ?: [];
 
-        $tasksData = json_decode($this->tasks, true);
+        $tasksData = json_decode($this->tasks, true) ?: [];
 
         // $servicesFeeData = $this->payment->services_fee ? json_decode($this->payment->services_fee, true) : null;
 
@@ -84,7 +84,7 @@ class WorkOrderResource extends JsonResource
             $check_in = null;
         }
 
-        $workOrderReport = WorkOrderReport::where('provider_id', Auth::user()->id)
+        $workOrderReport = WorkOrderReport::where('provider_id', optional(Auth::user())->id)
             ->where('work_order_unique_id', $this->work_order_unique_id)->first();
 
         $user_details = User::where('uuid', $this->uuid)->where('role', "Super Admin")->first();
@@ -153,9 +153,9 @@ class WorkOrderResource extends JsonResource
             'uuid' => $this->uuid,
             'user_id' => $this->user_id,
             'template' => $this->template,
-            'company' => $user_details->company->company_name ?? null,
-            'project_title' => $this->project->title ?? null,
-            'client_title' => $this->default_client->client_title ?? null,
+            'company' => optional(optional($user_details)->company)->company_name,
+            'project_title' => optional($this->project)->title,
+            'client_title' => optional($this->default_client)->client_title,
             'project' => $this->project,
             'work_order_unique_id' => $this->work_order_unique_id,
             'work_order_title' => $this->work_order_title,
@@ -169,7 +169,7 @@ class WorkOrderResource extends JsonResource
             'work_category' => $this->work_category,
             'additional_work_category' => $this->additional_work_category,
             'service_type_details' => $this->service_type ?? null,
-            'service_type' => $this->service_type->name ?? null,
+            'service_type' => optional($this->service_type)->name,
             'location' => $this->additional_location,
             'schedule_type' => $this->schedule_type,
             'schedule_date' => $this->schedule_date,
@@ -187,8 +187,8 @@ class WorkOrderResource extends JsonResource
             'documents_file' => $documents,
             'buyer_custom_field' => $this->buyer_custom_field,
             'manager' => $this->manager,
-            'shipments' => Shipment::whereIn('id', $shipmentIds)->get(),
-            'additional_contacts' => AdditionalContact::whereIn('id', $additionalContactIds)->get(),
+            'shipments' => Shipment::whereIn('id', is_array($shipmentIds) ? $shipmentIds : [])->get(),
+            'additional_contacts' => AdditionalContact::whereIn('id', is_array($additionalContactIds) ? $additionalContactIds : [])->get(),
             'qualification_type' => $this->transformQualificationType(),
             'tasks' => $tasksData,
             'status' => $this->status,

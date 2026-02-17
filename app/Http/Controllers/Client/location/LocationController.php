@@ -72,6 +72,8 @@ class LocationController extends Controller
             'city' => 'required|string|max:255',
             'state_id' => 'required',
             'zip_code' => 'required|string|max:20',
+            'latitude' => 'nullable|numeric|required_with:longitude',
+            'longitude' => 'nullable|numeric|required_with:latitude',
             'name_description' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
             'phone_ext' => 'nullable|string|max:10',
@@ -95,18 +97,20 @@ class LocationController extends Controller
             $country_name = Country::where('id', $request->country_id)->first();
             $state_name = State::where('id', $request->state_id)->first();
 
-            // Construct the full address
-            $full_address = "{$request->address_1}, {$request->city}, {$state_name->name}, {$request->zip_code}, {$country_name->name}";
-
-            // Get latitude and longitude using the geocoding function
-            $location = $this->CommonService->geocodeAddressOSM($full_address);
-
-            if ($location) {
-                $latitude = $location['latitude'];
-                $longitude = $location['longitude'];
+            if ($request->filled('latitude') && $request->filled('longitude')) {
+                $latitude = $request->latitude;
+                $longitude = $request->longitude;
             } else {
-                $latitude = null;
-                $longitude = null;
+                $full_address = "{$request->address_1}, {$request->city}, {$state_name->name}, {$request->zip_code}, {$country_name->name}";
+                $location = $this->CommonService->geocodeAddressOSM($full_address);
+
+                if ($location) {
+                    $latitude = $location['latitude'];
+                    $longitude = $location['longitude'];
+                } else {
+                    $latitude = null;
+                    $longitude = null;
+                }
             }
 
             $location = new AdditionalLocation();
@@ -191,6 +195,8 @@ class LocationController extends Controller
             'city' => 'nullable|string|max:255',
             'state_id' => 'nullable',
             'zip_code' => 'nullable|string|max:20',
+            'latitude' => 'nullable|numeric|required_with:longitude',
+            'longitude' => 'nullable|numeric|required_with:latitude',
             'name_description' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
             'phone_ext' => 'nullable|string|max:10',
@@ -220,21 +226,23 @@ class LocationController extends Controller
         $country_name = Country::where('id', $request->country_id ?? $location->country_id)->first();
         $state_name = State::where('id', $request->state_id ?? $location->state_id)->first();
 
-        // Construct the full address
-        $address_1 = $request->address_1 ?? $location->address_line_1;
-        $city = $request->city ?? $location->city;
-        $zip_code = $request->zip_code ?? $location->zip_code;
-        $full_address = "{$address_1}, {$city}, {$state_name->name}, {$zip_code}, {$country_name->name}";
-
-        // Get latitude and longitude using the geocoding function
-        $geoLocation = $this->CommonService->geocodeAddressOSM($full_address);
-
-        if ($geoLocation) {
-            $latitude = $geoLocation['latitude'];
-            $longitude = $geoLocation['longitude'];
+        if ($request->filled('latitude') && $request->filled('longitude')) {
+            $latitude = $request->latitude;
+            $longitude = $request->longitude;
         } else {
-            $latitude = null;
-            $longitude = null;
+            $address_1 = $request->address_1 ?? $location->address_line_1;
+            $city = $request->city ?? $location->city;
+            $zip_code = $request->zip_code ?? $location->zip_code;
+            $full_address = "{$address_1}, {$city}, {$state_name->name}, {$zip_code}, {$country_name->name}";
+            $geoLocation = $this->CommonService->geocodeAddressOSM($full_address);
+
+            if ($geoLocation) {
+                $latitude = $geoLocation['latitude'];
+                $longitude = $geoLocation['longitude'];
+            } else {
+                $latitude = null;
+                $longitude = null;
+            }
         }
 
         try {

@@ -119,6 +119,81 @@ class CommonController extends Controller
         }
     }
 
+    public function reverseGeocode(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            $formattedErrors = ApiResponseHelper::formatErrors(ApiResponseHelper::VALIDATION_ERROR, $validator->errors()->toArray());
+            return response()->json([
+                'errors' => $formattedErrors,
+                'payload' => null,
+            ], 422);
+        }
+
+        try {
+            $geo = $this->userService->reverseGeocodeOSM($request->latitude, $request->longitude);
+            if (!$geo) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unable to resolve address from coordinates.',
+                ], 404);
+            }
+
+            $country = Country::query()
+                ->where(function ($q) use ($geo) {
+                    if (!empty($geo['country'])) {
+                        $q->orWhereRaw('LOWER(name) = ?', [strtolower($geo['country'])]);
+                    }
+                    if (!empty($geo['country_code'])) {
+                        $q->orWhereRaw('UPPER(short_name) = ?', [strtoupper($geo['country_code'])]);
+                    }
+                })
+                ->first();
+
+            $state = null;
+            if ($country) {
+                $state = State::query()
+                    ->where('country_id', $country->id)
+                    ->where(function ($q) use ($geo) {
+                        if (!empty($geo['state'])) {
+                            $q->orWhereRaw('LOWER(name) = ?', [strtolower($geo['state'])]);
+                        }
+                        if (!empty($geo['state_code'])) {
+                            $q->orWhereRaw('UPPER(short_name) = ?', [strtoupper($geo['state_code'])]);
+                        }
+                    })
+                    ->first();
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'location' => [
+                    'latitude' => $geo['latitude'],
+                    'longitude' => $geo['longitude'],
+                    'address_line_1' => $geo['address_line_1'],
+                    'city' => $geo['city'],
+                    'state' => $geo['state'],
+                    'state_id' => $state?->id,
+                    'country' => $geo['country'],
+                    'country_id' => $country?->id,
+                    'zip_code' => $geo['postcode'],
+                    'display_name' => $geo['display_name'],
+                ],
+            ]);
+        } catch (\Exception $error) {
+            Log::error($error);
+            $formattedErrors = ApiResponseHelper::formatErrors(ApiResponseHelper::SYSTEM_ERROR, [ServerErrorMask::SERVER_ERROR]);
+            return response()->json([
+                'errors' => $formattedErrors,
+                'payload' => null,
+            ], 500);
+        }
+    }
+
     public function state_wise_zip_code(Request $request)
     {
         $rules = [
