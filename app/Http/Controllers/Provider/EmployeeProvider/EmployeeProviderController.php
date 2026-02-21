@@ -702,7 +702,7 @@ class EmployeeProviderController extends Controller
     {
         $rules = [
             'profile_id' => 'required',
-            'profile_image' => 'required',
+            'profile_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
         ];
 
         $validator = Validator::make($request->all(), $rules);
