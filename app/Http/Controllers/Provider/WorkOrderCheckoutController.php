@@ -21,6 +21,34 @@ use Illuminate\Support\Facades\Validator;
 
 class WorkOrderCheckoutController extends Controller
 {
+    private function canAccessWorkOrderTracking(WorkOrder $workOrder, $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        // Work order owner (client)
+        if ((int) $workOrder->user_id === (int) $user->id) {
+            return true;
+        }
+
+        // Assigned provider (ID/UUID match) regardless of organization_role label
+        if ((int) $workOrder->assigned_id === (int) $user->id) {
+            return true;
+        }
+
+        if (!empty($workOrder->assigned_uuid) && !empty($user->uuid) && $workOrder->assigned_uuid === $user->uuid) {
+            return true;
+        }
+
+        // Admin/Main roles
+        if (($user->role ?? null) === 'Super Admin' || ($user->organization_role ?? null) === 'Main') {
+            return true;
+        }
+
+        return false;
+    }
+
     public function startTime(Request $request, $work_order_unique_id)
     {
         $rules = [
@@ -646,23 +674,8 @@ class WorkOrderCheckoutController extends Controller
             ], 404);
         }
 
-        // Check authorization (client, provider, or admin)
         $user = Auth::user();
-        $isAuthorized = false;
-
-        if ($user->organization_role === 'Client' && $workOrder->user_id == $user->id) {
-            $isAuthorized = true;
-        }
-
-        if (in_array($user->organization_role, ['Provider', 'Provider Company']) && $workOrder->assigned_id == $user->id) {
-            $isAuthorized = true;
-        }
-
-        if ($user->role === 'Super Admin' || $user->organization_role === 'Main') {
-            $isAuthorized = true;
-        }
-
-        if (!$isAuthorized) {
+        if (!$this->canAccessWorkOrderTracking($workOrder, $user)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Not authorized to access this work order',
@@ -706,23 +719,8 @@ class WorkOrderCheckoutController extends Controller
             ], 404);
         }
 
-        // Check authorization (similar to getLatestLocation)
         $user = Auth::user();
-        $isAuthorized = false;
-
-        if ($user->organization_role === 'Client' && $workOrder->user_id == $user->id) {
-            $isAuthorized = true;
-        }
-
-        if (in_array($user->organization_role, ['Provider', 'Provider Company']) && $workOrder->assigned_id == $user->id) {
-            $isAuthorized = true;
-        }
-
-        if ($user->role === 'Super Admin' || $user->organization_role === 'Main') {
-            $isAuthorized = true;
-        }
-
-        if (!$isAuthorized) {
+        if (!$this->canAccessWorkOrderTracking($workOrder, $user)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Not authorized to access this work order',
