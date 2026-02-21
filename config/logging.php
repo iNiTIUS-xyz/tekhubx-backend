@@ -132,6 +132,13 @@ return [
             'level' => 'info',
             'days' => 30,
         ],
+        'auth' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/auth.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
     ],
 
 ];
