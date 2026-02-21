@@ -365,15 +365,27 @@ class WorkOrderController extends Controller
             //     'message' => 'New data inserted',
             //     'work_order' => new WorkOrderResource($workOrder),
             // ]);
-            // Dispatch job
-            CreateWorkOrderJob::dispatch($request->all(), $user);
+            // Dispatch asynchronously when queue is available.
+            // If queue storage/worker is not configured, fall back to sync execution.
+            $executedSync = false;
+            try {
+                CreateWorkOrderJob::dispatch($request->all(), $user);
+            } catch (\Throwable $queueError) {
+                Log::error('Queue dispatch failed for CreateWorkOrderJob, running sync fallback: ' . $queueError->getMessage(), [
+                    'user_id' => $user->id,
+                ]);
+                CreateWorkOrderJob::dispatchSync($request->all(), $user);
+                $executedSync = true;
+            }
 
             DB::commit();
             // Immediate response
             return response()->json([
                 'status' => 'success',
-                'message' => 'Work order is being created in the background. You will be notified once it is published.',
-            ], 202);
+                'message' => $executedSync
+                    ? 'Work order has been created successfully.'
+                    : 'Work order is being created in the background. You will be notified once it is published.',
+            ], $executedSync ? 201 : 202);
         } catch (\Exception $error) {
             DB::rollBack();
             Log::error($error);
