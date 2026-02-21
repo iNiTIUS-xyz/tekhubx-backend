@@ -60,7 +60,7 @@ class StaffController extends Controller
             'phone' => 'required|string|max:15',
             'address_1' => 'required|string|max:500',
             'role_id' => 'required|exists:roles,id',
-            'profile_image' => 'required|mimes:png,jpg,jpeg|max:10240',
+            'profile_image' => 'nullable|mimes:png,jpg,jpeg|max:10240',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:4',
             'status' => 'required|in:Active,Inactive',
