@@ -63,8 +63,8 @@ class ChatMessageController extends Controller
                         ->orWhereHas('counterOffers', fn($q) => $q->where('work_order_unique_id', $work_unique_id));
                 })
                 ->with([
-                    // 'profile',
-                    // 'employeeProvider',
+                    'profile' => fn($q) => $q->select('id', 'user_id', 'first_name', 'last_name', 'profile_image', 'phone'),
+                    'employeeProvider' => fn($q) => $q->select('id', 'user_id', 'first_name', 'last_name', 'phone', 'email'),
                     'latestSentMessage' => fn($q) => $q->where('work_order_unique_id', $work_unique_id),
                     'latestReceivedMessage' => fn($q) => $q->where('work_order_unique_id', $work_unique_id),
                 ])
@@ -72,20 +72,19 @@ class ChatMessageController extends Controller
 
             // Transform the collection to map names to the root level
             $chatUserList->transform(function ($user) {
-                // Determine the source of the info
-                // If role is Provider, take from employeeProvider, otherwise take from profile
-                $infoSource = ($user->organization_role === 'Provider')
-                    ? $user->employeeProvider
-                    : $user->profile;
+                // Prefer employee provider details for provider roles; fallback to profile, then username.
+                $isProviderRole = in_array($user->organization_role, ['Provider', 'Provider Company'], true);
+                $infoSource = $isProviderRole
+                    ? ($user->employeeProvider ?? $user->profile)
+                    : ($user->profile ?? $user->employeeProvider);
 
                 // Inject into the root of the user object
-                $user->first_name = $infoSource->first_name ?? null;
-                $user->last_name  = $infoSource->last_name ?? null;
+                $user->first_name = $infoSource->first_name ?? ($user->username ?? 'User');
+                $user->last_name  = $infoSource->last_name ?? '';
+                $user->phone = $infoSource->phone ?? null;
 
                 // Optional: Do the same for profile image if the frontend needs it
-                $user->image = ($user->organization_role === 'Provider')
-                    ? null // Add provider image field if it exists
-                    : ($user->profile->profile_image ?? null);
+                $user->image = $user->profile->profile_image ?? null;
 
                 return $user;
             });
