@@ -21,6 +21,49 @@ use Illuminate\Support\Facades\Validator;
 
 class WorkOrderCheckoutController extends Controller
 {
+    private function getTaskNotificationEmails(?string $tasksJson, string $taskName): array
+    {
+        $tasks = json_decode($tasksJson ?? '[]', true);
+        if (!is_array($tasks)) {
+            return [];
+        }
+
+        $normalizedTaskName = strtolower(trim($taskName));
+        $task = collect($tasks)->first(function ($item) use ($normalizedTaskName) {
+            $name = strtolower(trim((string) data_get($item, 'name', '')));
+            return $name === $normalizedTaskName;
+        });
+
+        $emails = data_get($task, 'notification_email', []);
+        if (!is_array($emails)) {
+            return [];
+        }
+
+        return array_values(array_filter($emails, fn($email) => is_string($email) && !empty($email)));
+    }
+
+    private function resolveScheduledStartTime(WorkOrder $workOrder, Request $request): Carbon
+    {
+        $startTime = null;
+
+        if ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[0]) {
+            $startTime = $workOrder->schedule_time;
+        } elseif ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[1]) {
+            $startTime = $workOrder->schedule_time_between_1;
+        } elseif ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[2]) {
+            $startTime = $workOrder->between_time;
+        }
+
+        // Fallback for legacy/incomplete schedule values
+        $startTime = $startTime
+            ?? $workOrder->schedule_time
+            ?? $workOrder->schedule_time_between_1
+            ?? $workOrder->between_time
+            ?? $request->check_in_time;
+
+        return Carbon::parse($startTime);
+    }
+
     private function canAccessWorkOrderTracking(WorkOrder $workOrder, $user): bool
     {
         if (!$user) {
@@ -75,9 +118,7 @@ class WorkOrderCheckoutController extends Controller
             ], 404);
         }
 
-        $tasks = json_decode($work_order->tasks, true);
-        $notificationEmails = collect($tasks)
-            ->firstWhere('name', 'Set Start Time')['notification_email'] ?? [];
+        $notificationEmails = $this->getTaskNotificationEmails($work_order->tasks, 'Set Start Time');
 
         foreach ($notificationEmails as $email) {
             Mail::send('emails.task_started', [
@@ -278,9 +319,7 @@ class WorkOrderCheckoutController extends Controller
                 ], 200);
             }
 
-            $tasks = json_decode($workOrder->tasks, true);
-            $notificationEmails = collect($tasks)
-                ->firstWhere('name', 'Set Start Time')['notification_email'] ?? [];
+            $notificationEmails = $this->getTaskNotificationEmails($workOrder->tasks, 'Set Start Time');
 
             $location = LiveTracking::create([
                 'work_order_unique_id' => $work_order_unique_id,
@@ -472,6 +511,12 @@ class WorkOrderCheckoutController extends Controller
                 ], 404);
             }
             $workOrder = WorkOrder::where('work_order_unique_id', $work_order_unique_id)->first();
+            if (!$workOrder) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Work order not found.',
+                ], 404);
+            }
 
             if ($provider_checkout->on_my_way !== 'yes') {
                 return response()->json([
@@ -506,9 +551,7 @@ class WorkOrderCheckoutController extends Controller
                 }
             }
 
-            $tasks = json_decode($workOrder->tasks, true);
-            $notificationEmails = collect($tasks)
-                ->firstWhere('name', 'Check in')['notification_email'] ?? [];
+            $notificationEmails = $this->getTaskNotificationEmails($workOrder->tasks, 'Check in');
 
             foreach ($notificationEmails as $email) {
                 Mail::send('emails.task_started', [
@@ -521,16 +564,7 @@ class WorkOrderCheckoutController extends Controller
             }
 
             // 3. Calculate time difference
-            if ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[0]) {
-                $start_time = $workOrder->schedule_time;
-            }
-            if ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[1]) {
-                $start_time = $workOrder->schedule_time_between_1;
-            }
-            if ($workOrder->schedule_type == GlobalConstant::ORDER_SCHEDULE_TYPE[2]) {
-                $start_time = $workOrder->between_time;
-            }
-            $scheduledStartTime = Carbon::parse($start_time);
+            $scheduledStartTime = $this->resolveScheduledStartTime($workOrder, $request);
             $checkInTime = Carbon::parse($request->check_in_time);
             $timeDifference = $checkInTime->diffInMinutes($scheduledStartTime, false);
 

@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\WorkOrder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,10 +14,13 @@ class HistoryLogResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $workOrder = WorkOrder::where('work_order_unique_id', $this->work_order_unique_id)->first();
+        $clientName = trim(($this->client->profile->first_name ?? '') . ' ' . ($this->client->profile->last_name ?? ''));
+        $providerName = trim(($this->provider->profile->first_name ?? '') . ' ' . ($this->provider->profile->last_name ?? ''));
+        $byUser = $clientName ?: $providerName ?: ($this->provider->username ?? $this->client->username ?? 'N/A');
+
         return [
             'id' => $this->id,
-            'by_user' => trim(($this->client->profile->first_name ?? '') . ' ' . ($this->client->profile->last_name ?? '')),
+            'by_user' => $byUser,
             'event' => $this->description,
             'date' => $this->date_time,
         ];
