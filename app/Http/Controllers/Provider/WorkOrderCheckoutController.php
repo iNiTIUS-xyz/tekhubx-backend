@@ -582,7 +582,8 @@ class WorkOrderCheckoutController extends Controller
 
             // 5. Log the check-in
             $provider_checkout->update([
-                'check_in_time' => $request->check_in_time,
+                // provider_checkouts.check_in_time is a DATE column
+                'check_in_time' => $checkInTime->toDateString(),
                 'is_check_in' => 'yes',
                 'timeliness_rate' => $timelinessImpact,
                 'status' => $status
@@ -597,7 +598,7 @@ class WorkOrderCheckoutController extends Controller
                 'heading' => $request->heading ?? 0,
                 'accuracy' => $request->accuracy,
                 'status' => 'check_in',
-                'tracked_at' => Carbon::parse($request->check_in_time),
+                'tracked_at' => $checkInTime,
             ]);
 
             $history = new HistoryLog();
